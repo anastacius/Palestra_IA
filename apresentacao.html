@@ -1,0 +1,3694 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolução da IA & Engenharia de Sistemas com SDD</title>
+    <meta name="description" content="Apresentação técnica sobre a história da inteligência artificial, terminologia moderna de sistemas e o ciclo do Spec-Driven Development.">
+    
+    <style>
+        /* ===================================================
+           RESET & VARIÁVEIS CROMÁTICAS
+           Design Sóbrio: Obsidiana, Ardósia, Âmbar, Azul e Esmeralda
+           Certificado WCAG AAA/AA
+           =================================================== */
+        :root {
+            --bg-canvas: #090d16;
+            --bg-slide: #0f172a;
+            --bg-card: #162035;
+            --bg-card-alt: #1c2942;
+            --border-card: #27364f;
+            --border-highlight: #3b5070;
+            
+            --text-heading: #f8fafc;
+            --text-body: #cbd5e1;
+            --text-muted: #94a3b8;
+            --text-faint: #8fa0b8;
+            
+            /* Destaques intencionais por semântica */
+            --accent-amber: #f59e0b;
+            --accent-amber-bg: rgba(245, 158, 11, 0.12);
+            --accent-blue: #38bdf8;
+            --accent-blue-bg: rgba(56, 189, 248, 0.12);
+            --accent-green: #10b981;
+            --accent-green-bg: rgba(16, 185, 129, 0.12);
+            --accent-rose: #f43f5e;
+            --accent-rose-bg: rgba(244, 63, 94, 0.12);
+            
+            --code-bg: #0b111e;
+            --code-border: #1e293b;
+            --code-text: #e2e8f0;
+            
+            --radius-md: 8px;
+            --radius-sm: 4px;
+            
+            /* Tipografia base fluida */
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: "JetBrains Mono", "Fira Code", Consolas, Menlo, monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden; /* RIGOROSAMENTE SEM ROLAGEM GLOBAL */
+            background-color: var(--bg-canvas);
+            font-family: var(--font-sans);
+            color: var(--text-body);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Barra de Progresso Superior */
+        #top-progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-amber), var(--accent-blue), var(--accent-green));
+            width: 0%;
+            transition: width 0.25s ease-out;
+            z-index: 100;
+        }
+
+        /* Contêiner Proporcional 16:9 Adaptativo */
+        #presentation-viewport {
+            width: min(98vw, calc(96vh * 16 / 9));
+            height: min(96vh, calc(98vw * 9 / 16));
+            aspect-ratio: 16 / 9;
+            background-color: var(--bg-slide);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-card);
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+            position: relative;
+            overflow: hidden; /* RIGOROSAMENTE SEM ROLAGEM NO SLIDE */
+            display: flex;
+        }
+
+        /* Painel Individual de Slide */
+        .slide-pane {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+            overflow: hidden; /* SEM ROLAGEM */
+        }
+
+        .slide-pane.active {
+            display: flex;
+            opacity: 1;
+            z-index: 10;
+        }
+
+        .slide-inner {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 2.2vmin 3.2vmin 1.8vmin 3.2vmin;
+            overflow: hidden;
+            justify-content: space-between;
+        }
+
+        /* Cabeçalho do Slide */
+        .slide-header {
+            flex-shrink: 0;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 1.4vmin;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 1.2vmin;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5vmin;
+        }
+
+        .act-pill {
+            font-size: clamp(13px, 1.6vmin, 19px);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.3vmin 1vmin;
+            border-radius: var(--radius-sm);
+            width: fit-content;
+            background: var(--bg-card);
+            color: var(--accent-amber);
+            border: 1px solid var(--border-card);
+        }
+
+        .act-history .act-pill { color: var(--accent-amber); border-color: rgba(245, 158, 11, 0.3); }
+        .act-systems .act-pill { color: var(--accent-blue); border-color: rgba(56, 189, 248, 0.3); }
+        .act-sdd .act-pill { color: var(--accent-green); border-color: rgba(16, 185, 129, 0.3); }
+
+        .slide-title {
+            font-size: clamp(26px, 3.6vmin, 44px);
+            font-weight: 800;
+            color: var(--text-heading);
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        .slide-subtitle {
+            font-size: clamp(16px, 2.1vmin, 24px);
+            color: var(--text-muted);
+            line-height: 1.35;
+        }
+
+        .slide-index-badge {
+            font-family: var(--font-mono);
+            font-size: clamp(17px, 2.2vmin, 26px);
+            font-weight: 700;
+            color: var(--text-faint);
+            background: var(--bg-card);
+            padding: 0.5vmin 1.4vmin;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-card);
+        }
+
+        /* Corpo do Slide (Flex 1, min-height 0 garante zero overflow) */
+        .slide-body {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            gap: 2vmin;
+            overflow: hidden;
+            align-items: stretch;
+        }
+
+        /* Variações de Layout Responsivas */
+        .layout-two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2vmin;
+            width: 100%;
+            height: 100%;
+        }
+
+        .layout-three-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1.8vmin;
+            width: 100%;
+            height: 100%;
+        }
+
+        .layout-split-60-40 {
+            display: grid;
+            grid-template-columns: 1.35fr 0.95fr;
+            gap: 2vmin;
+            width: 100%;
+            height: 100%;
+        }
+
+        .layout-hero {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Estilo dos Cards */
+        .col-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-md);
+            padding: 2vmin 2.4vmin;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            gap: 1.4vmin;
+            overflow: hidden;
+        }
+
+        .col-card.border-amber { border-color: rgba(245, 158, 11, 0.4); }
+        .col-card.border-blue { border-color: rgba(56, 189, 248, 0.4); }
+        .col-card.border-green { border-color: rgba(16, 185, 129, 0.4); }
+        .col-card.border-rose { border-color: rgba(244, 63, 94, 0.4); }
+
+        .card-tag {
+            font-size: clamp(12px, 1.5vmin, 17px);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            width: fit-content;
+            padding: 0.3vmin 0.8vmin;
+            border-radius: var(--radius-sm);
+        }
+
+        .tag-amber { background: var(--accent-amber-bg); color: var(--accent-amber); }
+        .tag-blue { background: var(--accent-blue-bg); color: var(--accent-blue); }
+        .tag-green { background: var(--accent-green-bg); color: var(--accent-green); }
+        .tag-rose { background: var(--accent-rose-bg); color: var(--accent-rose); }
+
+        .card-title {
+            font-size: clamp(20px, 2.6vmin, 32px);
+            font-weight: 700;
+            color: var(--text-heading);
+            line-height: 1.25;
+        }
+
+        .card-text {
+            font-size: clamp(15px, 2vmin, 23px);
+            line-height: 1.44;
+            color: var(--text-body);
+        }
+
+        .text-dim { color: var(--text-muted); }
+        .text-amber { color: var(--accent-amber); }
+        .text-blue { color: var(--accent-blue); }
+        .text-green { color: var(--accent-green); }
+        .text-rose { color: var(--accent-rose); }
+
+        /* Listas Limpas */
+        .clean-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 1.2vmin;
+            margin-top: 0.4vmin;
+        }
+
+        .clean-list li {
+            font-size: clamp(14.5px, 1.95vmin, 22px);
+            line-height: 1.4;
+            position: relative;
+            padding-left: 1.8vmin;
+            color: var(--text-body);
+        }
+
+        .clean-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--accent-blue);
+            font-weight: bold;
+        }
+
+        /* Blocos de Citação & Foco */
+        .quote-box {
+            background: var(--bg-card-alt);
+            border-left: 4px solid var(--accent-amber);
+            padding: 1.3vmin 1.8vmin;
+            font-size: clamp(15px, 2vmin, 23px);
+            font-style: italic;
+            color: var(--text-heading);
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            line-height: 1.42;
+        }
+
+        .note-pill {
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            padding: 0.9vmin 1.4vmin;
+            border-radius: var(--radius-sm);
+            font-size: clamp(14px, 1.8vmin, 21px);
+            color: var(--accent-blue);
+            line-height: 1.35;
+        }
+
+        /* Passos Sequenciais */
+        .timeline-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.4vmin;
+            font-size: clamp(14.5px, 1.95vmin, 22px);
+            line-height: 1.38;
+        }
+
+        .step-num {
+            background: var(--bg-card-alt);
+            color: var(--accent-blue);
+            font-weight: 700;
+            font-family: var(--font-mono);
+            font-size: clamp(13px, 1.7vmin, 19px);
+            width: 3.4vmin;
+            height: 3.4vmin;
+            min-width: 26px;
+            min-height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 1px solid var(--border-highlight);
+            flex-shrink: 0;
+        }
+
+        /* Caixas de Código Compactas com Cópia Interativa */
+        .code-box {
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: var(--radius-sm);
+            padding: 1vmin 1.4vmin;
+            font-family: var(--font-mono);
+            font-size: clamp(12.5px, 1.55vmin, 18px);
+            color: var(--code-text);
+            line-height: 1.38;
+            white-space: pre-wrap;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: border-color 0.15s ease;
+        }
+
+        .code-box:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .code-box::after {
+            content: "📋 Clique para copiar";
+            position: absolute;
+            top: 6px;
+            right: 10px;
+            font-size: clamp(10px, 1.2vmin, 14px);
+            color: var(--accent-blue);
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            padding: 3px 8px;
+            border-radius: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+
+        .code-box:hover::after {
+            opacity: 1;
+        }
+
+        /* Hero do Slide de Capa */
+        .hero-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            max-width: 82%;
+            gap: 2.2vmin;
+        }
+
+        .hero-tag {
+            font-size: clamp(14px, 1.8vmin, 22px);
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--accent-amber);
+            background: var(--accent-amber-bg);
+            padding: 0.7vmin 2vmin;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .hero-title {
+            font-size: clamp(38px, 6vmin, 66px);
+            font-weight: 900;
+            color: var(--text-heading);
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+        }
+
+        .hero-desc {
+            font-size: clamp(18px, 2.4vmin, 30px);
+            color: var(--text-body);
+            line-height: 1.45;
+            max-width: 88%;
+        }
+
+        .hero-meta-grid {
+            display: flex;
+            gap: 1.8vmin;
+            margin-top: 1.2vmin;
+        }
+
+        .meta-pill {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            padding: 1vmin 2vmin;
+            border-radius: var(--radius-sm);
+            font-size: clamp(14px, 1.9vmin, 22px);
+            color: var(--text-muted);
+        }
+
+        .meta-pill strong { color: var(--text-heading); }
+
+        /* Rodapé do Slide */
+        .slide-footer {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1.2vmin;
+            padding-top: 1vmin;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: clamp(13px, 1.6vmin, 18px);
+            color: var(--text-faint);
+        }
+
+        .keyboard-hints {
+            font-family: var(--font-mono);
+            letter-spacing: 0.02em;
+            color: var(--text-faint);
+            font-size: clamp(12px, 1.4vmin, 16px);
+        }
+
+        .slide-status-text {
+            font-size: clamp(13px, 1.5vmin, 18px);
+            font-weight: 600;
+        }
+
+        /* Controles Flutuantes e Gaveta de Slides */
+        .controls-toolbar {
+            position: fixed;
+            bottom: 1.8vh;
+            right: 2.2vw;
+            display: flex;
+            gap: 0.7rem;
+            z-index: 50;
+        }
+
+        .ctrl-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-card);
+            color: var(--text-heading);
+            padding: 0.65rem 1.1rem;
+            border-radius: var(--radius-sm);
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .ctrl-btn:hover {
+            background: var(--bg-card-alt);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        /* Modal Gaveta com Todos os Slides */
+        #overview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(9, 13, 22, 0.94);
+            backdrop-filter: blur(8px);
+            display: none;
+            flex-direction: column;
+            padding: 3vh 4vw;
+            z-index: 200;
+        }
+
+        #overview-modal.open {
+            display: flex;
+        }
+
+        .modal-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2vh;
+            border-bottom: 1px solid var(--border-card);
+            padding-bottom: 1.5vh;
+        }
+
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-heading);
+        }
+
+        .modal-grid {
+            flex: 1;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.1rem;
+            padding-right: 0.5rem;
+        }
+
+        .menu-slide-btn {
+            background: var(--bg-slide);
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-sm);
+            padding: 0.95rem;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            transition: all 0.15s ease;
+        }
+
+        .menu-slide-btn:hover {
+            background: var(--bg-card-alt);
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+
+        .menu-btn-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-num {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--accent-blue);
+        }
+
+        .menu-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .badge-hist { background: var(--accent-amber-bg); color: var(--accent-amber); }
+        .badge-sys { background: var(--accent-blue-bg); color: var(--accent-blue); }
+        .badge-sdd { background: var(--accent-green-bg); color: var(--accent-green); }
+        .badge-int { background: var(--bg-card); color: var(--text-muted); }
+
+        .menu-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-body);
+            line-height: 1.35;
+        }
+
+        /* Toast Feedback */
+        #toast-msg {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-card-alt);
+            border: 1px solid var(--accent-green);
+            color: var(--text-heading);
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            display: none;
+            z-index: 300;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="top-progress-bar" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="47"></div>
+
+    <main id="presentation-viewport" aria-label="Apresentação de Slides: Evolução da IA e SDD">
+        
+        <!-- SLIDE 1 -->
+        <section class="slide-pane act-intro" id="slide-1" data-slide-id="1" data-act="ABERTURA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ABERTURA</span>
+                        <h2 class="slide-title">Da Teoria ao Código Autônomo</h2>
+                        <p class="slide-subtitle">A Evolução da Inteligência Artificial e a Engenharia de Sistemas com SDD</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">01 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-hero">
+                    
+        <div class="hero-center">
+            <div class="hero-tag">HISTÓRIA • ARQUITETURA • SPEC-DRIVEN DEVELOPMENT</div>
+            <h1 class="hero-title">Da Teoria ao Código Autônomo</h1>
+            <p class="hero-desc">A trajetória da computação desde as primeiras simulações neurais de 1950 até sistemas corporativos baseados em especificações técnicas e agentes de software.</p>
+            <div class="hero-meta-grid">
+                <div class="meta-pill"><strong>Ato 1:</strong> Linha do Tempo (1950 – 2022)</div>
+                <div class="meta-pill"><strong>Ato 2:</strong> Da Conversa à Engenharia</div>
+                <div class="meta-pill"><strong>Ato 3:</strong> SDD na Prática: Sistema PDV</div>
+            </div>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 1 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 2 -->
+        <section class="slide-pane act-intro" id="slide-2" data-slide-id="2" data-act="ABERTURA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ABERTURA</span>
+                        <h2 class="slide-title">O Mapa da Apresentação</h2>
+                        <p class="slide-subtitle">Estrutura dos tópicos abordados</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">02 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-three-columns">
+                    
+        <div class="col-card act-card">
+            <div class="card-tag tag-amber">ATO 1 • 1950 A 2022</div>
+            <h3 class="card-title">A Linha do Tempo Histórica</h3>
+            <p class="card-text">Das formulações de Alan Turing e o Perceptron até a arquitetura Transformer e os modelos modernos de linguagem.</p>
+            <ul class="clean-list">
+                <li>Fundação matemática e períodos de inverno da IA</li>
+                <li>Transição estatística e aprendizado profundo</li>
+                <li>Mecanismos de atenção e modelos em escala</li>
+            </ul>
+        </div>
+        <div class="col-card act-card">
+            <div class="card-tag tag-blue">ATO 2 • 2022 A 2026</div>
+            <h3 class="card-title">Da Conversa à Engenharia</h3>
+            <p class="card-text">A transição de interfaces conversacionais para a execução estruturada de ferramentas em sistemas reais.</p>
+            <ul class="clean-list">
+                <li>Function Calling e o protocolo MCP</li>
+                <li>Limitações do Vibe Coding e conceito de Harness</li>
+                <li>Guias vs Sensores e o Paradigma RPI</li>
+            </ul>
+        </div>
+        <div class="col-card act-card">
+            <div class="card-tag tag-green">ATO 3 • SDD NA PRÁTICA</div>
+            <h3 class="card-title">O Ciclo SDD em Ação</h3>
+            <p class="card-text">Desenvolvimento orientado a especificações aplicado a um Sistema de Ponto de Vendas (PDV).</p>
+            <ul class="clean-list">
+                <li><code>spec.md</code>: Escopo e regras de negócio</li>
+                <li><code>plan.md</code>: Arquitetura técnica e contratos</li>
+                <li><code>tasks.md</code> e <code>state.md</code>: Execução e rastreabilidade</li>
+            </ul>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 2 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 3 -->
+        <section class="slide-pane act-intro" id="slide-3" data-slide-id="3" data-act="ABERTURA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ABERTURA</span>
+                        <h2 class="slide-title">O Ponto de Inflexão</h2>
+                        <p class="slide-subtitle">A mudança da interação conversacional para a arquitetura de sistemas</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">03 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card">
+            <h3 class="card-title text-amber">Limitações do Uso Apenas Estatístico</h3>
+            <p class="card-text">Os Large Language Models (LLMs) são modelos estatísticos probabilísticos voltados à geração e interpretação de texto e código. Sem controles de arquitetura, estão sujeitos a alucinações e perda de coerência em contextos extensos.</p>
+            <div class="quote-box">
+                "O modelo realiza a inferência estatística. A infraestrutura de software e as especificações técnicas garantem o controle e a previsibilidade."
+            </div>
+            <p class="card-text text-dim">Em ambientes de produção, código gerado sem limites formais ou testes automáticos gera retrabalho e quebras de integração.</p>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-blue">Evolução dos Padrões de Uso</h3>
+            <div class="timeline-step">
+                <span class="step-num">1</span>
+                <div>
+                    <strong>2022 – 2023: Uso Conversacional</strong>
+                    <p class="text-dim">Perguntas e respostas em chat; foco em prompts textuais.</p>
+                </div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">2</span>
+                <div>
+                    <strong>2024 – 2025: Execução com Ferramentas</strong>
+                    <p class="text-dim">Acionamento de comandos, protocolo MCP e isolamento de tarefas.</p>
+                </div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">3</span>
+                <div>
+                    <strong>2026: Engenharia com Especificações (SDD)</strong>
+                    <p class="text-dim">Especificações formais como guia; testes e linters validando o código gerado.</p>
+                </div>
+            </div>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 3 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 4 -->
+        <section class="slide-pane act-history" id="slide-4" data-slide-id="4" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">1950 – 1956: A Fundação Teórica e o Início da Disciplina</h2>
+                        <p class="slide-subtitle">Alan Turing, primeiras simulações neurais e o encontro em Dartmouth</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">04 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-amber">1950 • ALAN TURING</div>
+            <h3 class="card-title">O "Jogo da Imitação"</h3>
+            <p class="card-text">No artigo <em>Computing Machinery and Intelligence</em>, Turing formulou a pergunta: <strong>"Máquinas podem pensar?"</strong>.</p>
+            <p class="card-text">Propôs o Teste de Turing: avaliar a capacidade de uma máquina a partir de sua habilidade em sustentar um diálogo indistinguível de um ser humano.</p>
+            <div class="note-pill">Marco histórico: Proposta de avaliar inteligência computacional através da linguagem natural.</div>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-blue">1951 & 1956 • PIONEIROS</div>
+            <h3 class="card-title">SNARC e o Workshop de Dartmouth</h3>
+            <p class="card-text"><strong>1951 — O SNARC:</strong> Marvin Minsky e Dean Edmonds constroem uma máquina de rede neural analógica com 40 sinapses, simulando o aprendizado de caminhos em labirintos.</p>
+            <p class="card-text"><strong>1956 — Conferência de Dartmouth:</strong> John McCarthy, Marvin Minsky, Claude Shannon e Nathaniel Rochester adotam oficialmente o termo <strong>"Inteligência Artificial"</strong> como área de estudo da ciência da computação.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 4 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 5 -->
+        <section class="slide-pane act-history" id="slide-5" data-slide-id="5" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">1956 – 1966: A Era Simbólica e os Primeiros Programas</h2>
+                        <p class="slide-subtitle">Dedução lógica, o neurônio artificial inicial e o processamento de texto</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">05 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-three-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-amber">1956 – 1957</div>
+            <h3 class="card-title">Logic Theorist & GPS</h3>
+            <p class="card-text">Allen Newell e Herbert Simon desenvolvem programas voltados à dedução lógica e demonstração de teoremas matemáticos a partir de regras formais.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-blue">1957 – 1958</div>
+            <h3 class="card-title">Perceptron & LISP</h3>
+            <p class="card-text"><strong>Frank Rosenblatt</strong> apresenta o Perceptron, rede neural de camada única com ajuste de pesos lineares.</p>
+            <p class="card-text"><strong>John McCarthy</strong> cria a linguagem <strong>LISP</strong>, amplamente adotada na pesquisa de IA nas décadas seguintes.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-green">1965 – 1966</div>
+            <h3 class="card-title">ELIZA</h3>
+            <p class="card-text">Joseph Weizenbaum desenvolve o programa ELIZA, simulando respostas conversacionais através de casamento de padrões léxicos (pattern matching).</p>
+            <p class="card-text text-dim">Demonstrou a facilidade com que usuários atribuíam compreensão a regras determinísticas simples.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 5 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 6 -->
+        <section class="slide-pane act-history" id="slide-6" data-slide-id="6" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">1969 – 1974: Rigor de Software e o Primeiro Inverno da IA</h2>
+                        <p class="slide-subtitle">Conferências da OTAN, limitações teóricas e redução de financiamentos</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">06 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-blue">1969 • ENGENHARIA DE SOFTWARE</div>
+            <h3 class="card-title">Origens da Especificação Formal</h3>
+            <p class="card-text">Com sistemas complexos (como o Apollo Guidance Computer da NASA) e as conferências pioneiras da OTAN, consolidou-se a importância de processos formais de engenharia de software.</p>
+            <p class="card-text text-dim">Especificações estruturadas e testes tornaram-se fundamentais para garantir a confiabilidade de sistemas de grande porte.</p>
+        </div>
+        <div class="col-card border-rose">
+            <div class="card-tag tag-rose">1969 – 1974 • PRIMEIRO INVERNO</div>
+            <h3 class="card-title">Limitações do Perceptron e Queda de Investimentos</h3>
+            <p class="card-text">Minsky e Papert publicam a análise matemática demonstrando que o Perceptron de camada única não conseguia solucionar funções lineares não separáveis (como o operador <strong>XOR</strong>).</p>
+            <p class="card-text">Relatórios como o Lighthill (Reino Unido) e revisões de orçamento da DARPA (EUA) reduziram os recursos destinados ao setor, iniciando o Primeiro Inverno da IA.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 6 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 7 -->
+        <section class="slide-pane act-history" id="slide-7" data-slide-id="7" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">1975 – 1986: Sistemas Especialistas e o Backpropagation</h2>
+                        <p class="slide-subtitle">Bases de regras no ambiente corporativo e treinamento de redes multicamadas</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">07 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-amber">FINAL ANOS 70 • BASES DE REGRAS</div>
+            <h3 class="card-title">Sistemas Especialistas</h3>
+            <p class="card-text">O foco da indústria voltou-se para sistemas estruturados em motores de inferência e bases de regras (SE-ENTÃO):</p>
+            <ul class="clean-list">
+                <li><strong>MYCIN:</strong> Apoio a diagnósticos médicos bacterianos.</li>
+                <li><strong>Dendral:</strong> Identificação de estruturas químicas moleculares.</li>
+                <li><strong>R1/XCON:</strong> Configuração de equipamentos de computação da DEC.</li>
+            </ul>
+            <p class="text-dim">Desafio: Alta complexidade para atualizar e manter bases de regras extensas.</p>
+        </div>
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">1986 • REDES MULTICAMADAS</div>
+            <h3 class="card-title">O Algoritmo de Backpropagation</h3>
+            <p class="card-text">Geoffrey Hinton, David Rumelhart e Ronald Williams popularizam o algoritmo de <strong>retropropagação de erro</strong> (<em>Backpropagation</em>).</p>
+            <p class="card-text">O método viabilizou o treinamento prático de redes neurais com múltiplas camadas ocultas (MLP), solucionando o problema do XOR.</p>
+            <div class="note-pill">Base algorítmica para o treinamento do aprendizado de máquina moderno.</div>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 7 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 8 -->
+        <section class="slide-pane act-history" id="slide-8" data-slide-id="8" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">1987 – 1993: O Segundo Inverno e a Mudança de Hardware</h2>
+                        <p class="slide-subtitle">Substituição de estações proprietárias por computadores de uso geral</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">08 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-rose">
+            <div class="card-tag tag-rose">1987 – 1993 • SEGUNDO INVERNO</div>
+            <h3 class="card-title">A Substituição do Hardware Proprietário</h3>
+            <p class="card-text">Nos anos 1980, estações dedicadas exclusivamente a rodar LISP tinham custos de aquisição e manutenção elevados.</p>
+            <p class="card-text">A evolução rápida dos processadores de uso geral baseados em arquitetura <strong>x86 (Intel)</strong> e sistemas Unix reduziu o interesse comercial por equipamentos proprietários dedicados.</p>
+            <p class="card-text text-dim">Com a redução do mercado de máquinas especializadas e expectativas não atendidas de sistemas especialistas, os investimentos arrefeceram temporariamente.</p>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-amber">Lição da Engenharia</h3>
+            <div class="quote-box">
+                "Soluções baseadas em hardware de uso geral e algoritmos eficientes historicamente superam equipamentos proprietários fechados de alto custo."
+            </div>
+            <p class="card-text text-dim">Essa dinâmica repetiu-se décadas depois, quando processadores gráficos comerciais (GPUs) viabilizaram o Deep Learning.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 8 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 9 -->
+        <section class="slide-pane act-history" id="slide-9" data-slide-id="9" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">1990 – 1997: Métodos Estatísticos e Marcos Computacionais</h2>
+                        <p class="slide-subtitle">Abordagens probabilísticas, redes LSTM e o confronto no xadrez</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">09 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-three-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-amber">ANOS 1990</div>
+            <h3 class="card-title">Métodos Probabilísticos</h3>
+            <p class="card-text">O campo incorporou amplamente métodos estatísticos e teoria da informação:</p>
+            <ul class="clean-list">
+                <li>Modelos Ocultos de Markov (HMM) para fala.</li>
+                <li>Support Vector Machines (SVMs) para classificação.</li>
+                <li>Redes Bayesianas para inferência sob incerteza.</li>
+            </ul>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-blue">1997 • IBM</div>
+            <h3 class="card-title">Deep Blue vs Kasparov</h3>
+            <p class="card-text">O sistema da IBM venceu o campeão mundial Garry Kasparov em uma série de xadrez.</p>
+            <p class="card-text text-dim">Combinação de processamento paralelo, busca em árvore minimax com poda alfa-beta e funções de avaliação heurística aceleradas por hardware.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-green">1997 • REDES RECORRENTES</div>
+            <h3 class="card-title">Redes LSTM</h3>
+            <p class="card-text">Hochreiter e Schmidhuber propõem as redes <strong>Long Short-Term Memory</strong>.</p>
+            <p class="card-text text-dim">Trataram o problema do desaparecimento de gradientes em séries temporais, viabilizando o processamento de sequências longas de dados e texto.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 9 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 10 -->
+        <section class="slide-pane act-history" id="slide-10" data-slide-id="10" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">2004 – 2006: Especificações Verificáveis e o Deep Learning</h2>
+                        <p class="slide-subtitle">Rigor metodológico no software e retomada das redes neurais profundas</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">10 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-blue">2004 • ENGENHARIA DE SOFTWARE</div>
+            <h3 class="card-title">Specification by Example</h3>
+            <p class="card-text">Martin Fowler e teóricos de engenharia consolidam o conceito de que especificações vivas e testes automatizados devem guiar a implementação do software.</p>
+            <p class="card-text text-dim">Essa base conceitual antecipa o princípio do <em>Spec-Driven Development (SDD)</em>: definir contratos claros e critérios de aceite antes de iniciar a codificação.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-green">2006 • GEOFFREY HINTON</div>
+            <h3 class="card-title">O Termo "Deep Learning"</h3>
+            <p class="card-text">Geoffrey Hinton e pesquisadores rebatizam o campo de redes densas através de técnicas de pré-treinamento com Restricted Boltzmann Machines (RBM).</p>
+            <p class="card-text text-dim">O trabalho demonstrou que redes com múltiplas camadas podiam aprender representações hierárquicas de dados de forma eficiente.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 10 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 11 -->
+        <section class="slide-pane act-history" id="slide-11" data-slide-id="11" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">2010 – 2012: Escala de Dados, GPUs e a AlexNet</h2>
+                        <p class="slide-subtitle">Aceleração por placas gráficas e o resultado no ImageNet</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">11 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-amber">
+            <div class="card-tag tag-amber">2012 • RECONHECIMENTO DE IMAGENS</div>
+            <h3 class="card-title">O Resultado da AlexNet no ImageNet</h3>
+            <p class="card-text">Alex Krizhevsky, Ilya Sutskever e Geoffrey Hinton apresentaram a AlexNet, uma rede convolucional profunda treinada em placas gráficas comerciais.</p>
+            <p class="card-text">A arquitetura reduziu o erro no desafio ImageNet para <strong>15.3%</strong>, superando com margem clara os métodos de visão baseados em atributos manuais.</p>
+            <p class="card-text text-dim">O experimento confirmou a eficiência de redes neurais profundas quando combinadas a grandes volumes de dados e processamento paralelo em GPUs.</p>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-blue">Fatores de Aceleração</h3>
+            <div class="timeline-step">
+                <span class="step-num">1</span>
+                <div><strong>Conjuntos Massivos de Dados:</strong> Milhões de imagens e textos rotulados disponíveis na web.</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">2</span>
+                <div><strong>Processamento em GPUs:</strong> Chips acelerando operações matriciais em paralelo.</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">3</span>
+                <div><strong>Melhorias Algorítmicas:</strong> Funções de ativação ReLU e técnicas de regularização (Dropout).</div>
+            </div>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 11 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 12 -->
+        <section class="slide-pane act-history" id="slide-12" data-slide-id="12" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">2014 – 2016: Modelos Generativos e Jogos de Estratégia</h2>
+                        <p class="slide-subtitle">Treinamento adversarial com GANs e a vitória do AlphaGo</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">12 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-amber">2014 • IAN GOODFELLOW</div>
+            <h3 class="card-title">Redes Generativas Adversariais (GANs)</h3>
+            <p class="card-text">Estrutura baseada em duas redes neurais treinadas de forma concorrente:</p>
+            <ul class="clean-list">
+                <li><strong>Gerador:</strong> Produz amostras sintéticas a partir de distribuições de dados.</li>
+                <li><strong>Discriminador:</strong> Avalia a probabilidade de uma amostra ser real ou sintetizada.</li>
+            </ul>
+            <p class="text-dim">Abriu caminho para avanços na síntese de imagens, áudio e representações visuais.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-green">2016 • DEEPMIND</div>
+            <h3 class="card-title">AlphaGo vs Lee Sedol</h3>
+            <p class="card-text">O AlphaGo superou o jogador profissional Lee Sedol em Go, um jogo com elevado espaço de estados e combinações possíveis.</p>
+            <p class="card-text">O sistema combinou redes neurais profundas com <strong>Aprendizado por Reforço (RL)</strong> e busca em árvore de Monte Carlo (MCTS).</p>
+            <div class="note-pill">Lance 37: Jogada que superou heurísticas humanas tradicionais do jogo.</div>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 12 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 13 -->
+        <section class="slide-pane act-history" id="slide-13" data-slide-id="13" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">2017: 'Attention Is All You Need' — O Transformer</h2>
+                        <p class="slide-subtitle">A introdução da arquitetura baseada inteiramente em Autoatenção</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">13 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-blue">
+            <div class="card-tag tag-blue">JUNHO DE 2017 • PESQUISADORES DO GOOGLE</div>
+            <h3 class="card-title">O Mecanismo de Autoatenção (Self-Attention)</h3>
+            <p class="card-text">Vaswani et al. propuseram substituir as arquiteturas recorrentes (RNNs e LSTMs) pelo cálculo direto de atenção mútua entre todos os tokens da sentença.</p>
+            <p class="card-text">Ao contrário de modelos sequenciais que processam termo por termo, o Transformer processa os elementos em paralelo, calculando o peso relacional entre termos distantes.</p>
+            <div class="quote-box">
+                "A arquitetura viabilizou o treinamento paralelo em grande escala, tornando-se a base dos modelos de linguagem modernos."
+            </div>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-green">Características Técnicas</h3>
+            <ul class="clean-list">
+                <li><strong>Paralelismo no Treino:</strong> Uso eficiente de clusters de GPUs e TPUs.</li>
+                <li><strong>Relações de Longa Distância:</strong> Conexões diretas entre palavras sem perda de sinal ao longo da cadeia.</li>
+                <li><strong>Arquitetura Comum:</strong> Aplicável a tarefas de texto, código, visão e áudio.</li>
+            </ul>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 13 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 14 -->
+        <section class="slide-pane act-history" id="slide-14" data-slide-id="14" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">2018 – 2019: Modelos Pré-Treinados e Tokenização</h2>
+                        <p class="slide-subtitle">Compreensão contextual, geração autorregressiva e fragmentação BPE</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">14 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-three-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-blue">2018 • GOOGLE</div>
+            <h3 class="card-title">BERT</h3>
+            <p class="card-text">Modelo com leitura bidirecional do texto para tarefas de classificação e busca semântica.</p>
+            <p class="text-dim">Processa o contexto à esquerda e à direita de cada termo simultaneamente.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-amber">2018 – 2019 • OPENAI</div>
+            <h3 class="card-title">GPT-1 & GPT-2</h3>
+            <p class="card-text">Modelos generativos autorregressivos com pré-treinamento seguido de ajuste fino.</p>
+            <p class="text-dim">O GPT-2 demonstrou capacidade de sustentar coerência sintática em sequências mais longas de texto.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-green">PADRÃO TÉCNICO</div>
+            <h3 class="card-title">Tokenização BPE</h3>
+            <p class="card-text">Adoção do Byte-Pair Encoding para dividir palavras e símbolos de programação em subunidades discretas (Token IDs).</p>
+            <p class="text-dim">Permite manipular vocabulários extensos de forma eficiente.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 14 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 15 -->
+        <section class="slide-pane act-history" id="slide-15" data-slide-id="15" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">2020 – 2021: Modelos de Larga Escala e Alinhamento</h2>
+                        <p class="slide-subtitle">Aprendizado em contexto, comandos em linguagem natural e RLHF</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">15 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-amber">2020 • GPT-3 (175B PARÂMETROS)</div>
+            <h3 class="card-title">Propriedades de Inferência em Larga Escala</h3>
+            <p class="card-text">Com o aumento de parâmetros e dados de treino, observaram-se comportamentos adicionais:</p>
+            <ul class="clean-list">
+                <li><strong>In-Context Learning:</strong> O modelo responde a instruções diretas no prompt sem atualização de pesos.</li>
+                <li><strong>Few-Shot Learning:</strong> Capacidade de realizar tarefas com base em poucos exemplos no contexto.</li>
+                <li><strong>Prompt Engineering:</strong> Formulação estruturada de instruções para guiar a resposta.</li>
+            </ul>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-green">2021 – 2022 • ALINHAMENTO E CÓDIGO</div>
+            <h3 class="card-title">RLHF e Ferramentas de Código</h3>
+            <p class="card-text"><strong>RLHF (Reinforcement Learning from Human Feedback):</strong> Treinadores humanos avaliam respostas para guiar o modelo rumo a saídas mais adequadas e seguras.</p>
+            <p class="card-text"><strong>OpenAI Codex:</strong> Treinamento específico em bases de código-fonte, servindo de base para assistentes de programação integrados a IDEs.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 15 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 16 -->
+        <section class="slide-pane act-history" id="slide-16" data-slide-id="16" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">Novembro de 2022: O Lançamento do ChatGPT</h2>
+                        <p class="slide-subtitle">Abertura do acesso aos modelos de linguagem para o público amplo</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">16 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">30 DE NOVEMBRO DE 2022</div>
+            <h3 class="card-title">Disponibilização Pública</h3>
+            <p class="card-text">A OpenAI disponibilizou uma interface web conversacional para um modelo de linguagem alinhado (GPT-3.5), alcançando ampla adoção em curto período.</p>
+            <p class="card-text">Pessoas de diversas áreas passaram a utilizar ferramentas baseadas em modelos de linguagem no dia a dia.</p>
+            <div class="quote-box">
+                "O lançamento acelerou o uso prático da tecnologia e evidenciou a necessidade de conectar modelos a sistemas externos com governança e testes."
+            </div>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-amber">Limitações do Chat Isolado</h3>
+            <ul class="clean-list">
+                <li><strong>Apenas Texto:</strong> O modelo não executa ações nem consulta bancos de dados por si só.</li>
+                <li><strong>Alucinações:</strong> Respostas incorretas geradas com estrutura formal convincente.</li>
+                <li><strong>Corte Temporal:</strong> Conhecimento restrito à data final da base de treinamento.</li>
+            </ul>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 16 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 17 -->
+        <section class="slide-pane act-history" id="slide-17" data-slide-id="17" data-act="ATO 1: HISTÓRIA DA IA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 1: HISTÓRIA DA IA</span>
+                        <h2 class="slide-title">Síntese do Ato 1: A Trajetória da IA</h2>
+                        <p class="slide-subtitle">Evolução entre abordagens simbólicas, métodos estatísticos e sistemas agênticos</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">17 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-three-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-amber">1950 – 1980 • ABORDAGEM SIMBÓLICA</div>
+            <h3 class="card-title">Lógica e Dedução</h3>
+            <p class="card-text">Regras formais, árvores de decisão e sistemas especialistas baseados em conhecimento pré-definido.</p>
+            <p class="text-dim"><strong>Pontos Fortes:</strong> Auditável e determinístico.<br><strong>Limitações:</strong> Dificuldade ao lidar com dados ambíguos ou incompletos.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-blue">1990 – 2022 • CONEXIONISMO E DADOS</div>
+            <h3 class="card-title">Métodos Estatísticos</h3>
+            <p class="card-text">Redes neurais profundas treinadas em grandes volumes de dados usando processamento paralelo.</p>
+            <p class="text-dim"><strong>Pontos Fortes:</strong> Alta adaptabilidade semântica.<br><strong>Limitações:</strong> Comportamento estocástico e falta de garantias formais.</p>
+        </div>
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">2023 – 2026 • SISTEMAS AGÊNTICOS</div>
+            <h3 class="card-title">Agentes e SDD</h3>
+            <p class="card-text">Modelos de linguagem integrados a infraestruturas de execução (harness) e orientados por especificações técnicas.</p>
+            <p class="text-dim"><strong>Resultado:</strong> Raciocínio semântico validado por ferramentas determinísticas de engenharia de software.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 17 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 18 -->
+        <section class="slide-pane act-systems" id="slide-18" data-slide-id="18" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">2022 a 2026: Da Conversa à Ação</h2>
+                        <p class="slide-subtitle">Limitações de interfaces de chat para processos corporativos</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">18 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card">
+            <h3 class="card-title text-amber">Limitações do Chat Isolado</h3>
+            <p class="card-text">Interfaces conversacionais comuns operam apenas com entrada e saída de texto. O modelo não tem acesso direto a arquivos, sistemas operacionais ou bancos de dados.</p>
+            <p class="card-text">Para automações reais, o sistema precisa executar comandos, consultar APIs, rodar testes e registrar informações com rastreabilidade.</p>
+            <div class="note-pill">Evolução: de modelos que apenas geram texto para agentes integrados a ferramentas.</div>
+        </div>
+        <div class="col-card border-blue">
+            <div class="card-tag tag-blue">ESTRUTURA DOS SISTEMAS MODERNOS</div>
+            <h3 class="card-title">Elementos de Engenharia</h3>
+            <ul class="clean-list">
+                <li><strong>Ação Estruturada:</strong> Saídas JSON para acionar ferramentas e scripts.</li>
+                <li><strong>Protocolo Aberto:</strong> Conexões universais via Model Context Protocol (MCP).</li>
+                <li><strong>Harness de Execução:</strong> Sandboxes, políticas de permissão e testes pós-ação.</li>
+                <li><strong>Governança com SDD:</strong> Especificação técnica clara para direcionar o trabalho.</li>
+            </ul>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 18 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 19 -->
+        <section class="slide-pane act-systems" id="slide-19" data-slide-id="19" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Fundamentos: Modelos de Linguagem e Tokens</h2>
+                        <p class="slide-subtitle">Processamento interno e métricas de consumo computacional</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">19 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-blue">LLM (LARGE LANGUAGE MODEL)</div>
+            <h3 class="card-title">Inferência Estatística Probabilística</h3>
+            <p class="card-text">O modelo de linguagem prevê o próximo token mais provável com base nos parâmetros ajustados e no contexto fornecido:</p>
+            <div class="code-box">P(token_{t} | token_{1}, token_{2}, ..., token_{t-1})</div>
+            <p class="card-text text-dim">Funciona como um processador semântico estatístico capaz de mapear padrões em texto e código-fonte.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-amber">TOKEN: A UNIDADE DE PROCESSAMENTO</div>
+            <h3 class="card-title">Processamento e Custo</h3>
+            <p class="card-text">Tokens são fragmentos de palavras ou caracteres de código. Em português, 1 token equivale em média a 3 ou 4 caracteres (ex: <code>"execução"</code> ≈ 3 tokens).</p>
+            <ul class="clean-list">
+                <li><strong>Memória de Trabalho:</strong> Cada token no contexto ocupa memória nas GPUs durante a inferência.</li>
+                <li><strong>Faturamento de API:</strong> As requisições são contabilizadas por tokens de entrada e saída.</li>
+                <li><strong>Gestão de Contexto:</strong> Reduzir informações desnecessárias melhora o desempenho e reduz custos.</li>
+            </ul>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 19 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 20 -->
+        <section class="slide-pane act-systems" id="slide-20" data-slide-id="20" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Limitações Técnicas: Janela de Contexto e Alucinações</h2>
+                        <p class="slide-subtitle">Efeitos do excesso de dados e ausência de informações factuais</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">20 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card border-rose">
+            <div class="card-tag tag-rose">ATENÇÃO E VOLUME DE DADOS</div>
+            <h3 class="card-title">Saturação da Janela de Contexto</h3>
+            <p class="card-text">Mesmo em modelos com suporte a centenas de milhares de tokens, adicionar dados em excesso reduz a precisão na recuperação de instruções específicas (efeito <em>needle-in-a-haystack</em>).</p>
+            <p class="card-text">Instruções posicionadas no meio de contextos muito longos podem receber menor atenção do modelo em relação ao início e ao fim.</p>
+            <div class="note-pill">Boa prática: fornecer contexto direto e focado sob demanda melhora a acurácia.</div>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-amber">MECANISMO DAS ALUCINAÇÕES</div>
+            <h3 class="card-title">Respostas Incorretas com Estrutura Correta</h3>
+            <p class="card-text">Como o modelo calcula continuações estatísticas, a ausência de dados factuais ou prompts ambíguos pode levá-lo a gerar parâmetros, nomes de funções ou fatos inexistentes de forma sintaticamente convincente.</p>
+            <p class="card-text text-dim">Solução técnica: injetar dados factuais por ferramentas e validar retornos com testes automatizados.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 20 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 21 -->
+        <section class="slide-pane act-systems" id="slide-21" data-slide-id="21" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Function Calling (Tool Use): Execução de Ferramentas</h2>
+                        <p class="slide-subtitle">Como modelos de linguagem acionam comandos e serviços externos</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">21 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-blue">
+            <div class="card-tag tag-blue">CONCEITO TÉCNICO</div>
+            <h3 class="card-title">Interação Estruturada com o Ambiente</h3>
+            <p class="card-text">O modelo de linguagem opera em ambiente de inferência e não acessa diretamente o sistema de arquivos, redes ou bancos de dados.</p>
+            <p class="card-text">Com o <strong>Function Calling</strong>, o sistema hospedeiro expõe ferramentas com schemas definidos (JSON). Quando precisa de uma ação ou dado externo, o modelo interrompe o texto livre e emite uma requisição estruturada com parâmetros.</p>
+            <div class="quote-box">
+                "O modelo decide qual função chamar e com quais parâmetros; a aplicação executa a função e devolve o resultado."
+            </div>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-amber">Aplicações Práticas</h3>
+            <ul class="clean-list">
+                <li>Execução de comandos em terminal (bash, scripts).</li>
+                <li>Leitura e escrita controlada de arquivos locais.</li>
+                <li>Consultas a bancos de dados relacionais e vetoriais.</li>
+                <li>Requisições a APIs REST e serviços externos.</li>
+            </ul>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 21 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 22 -->
+        <section class="slide-pane act-systems" id="slide-22" data-slide-id="22" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Function Calling na Prática: Fluxo em 4 Etapas</h2>
+                        <p class="slide-subtitle">Exemplo de consulta com retorno factual estruturado</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">22 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-blue">FLUXO DE EXECUÇÃO</div>
+            <div class="timeline-step">
+                <span class="step-num">1</span>
+                <div><strong>Usuário solicita:</strong> "Qual a temperatura atual em São Paulo?"</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">2</span>
+                <div><strong>Modelo emite chamada estruturada:</strong> <code>get_weather({"city": "Sao Paulo"})</code></div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">3</span>
+                <div><strong>Aplicação consulta serviço meteorológico:</strong> Retorna <code>{"temp": 24.2, "clima": "Nublado"}</code></div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">4</span>
+                <div><strong>Modelo formata a resposta final:</strong> "Em São Paulo está nublado com 24.2°C."</div>
+            </div>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-green">PAYLOAD ESTRUTURADO (JSON)</div>
+            <div class="code-box">
+// 1. Chamada emitida pelo modelo
+{
+  "name": "get_weather",
+  "arguments": {
+    "city": "Sao Paulo",
+    "unit": "celsius"
+  }
+}
+
+// 2. Retorno entregue ao modelo
+{
+  "status": "success",
+  "data": { "temp": 24.2, "humidity": 78 }
+}
+            </div>
+            <p class="text-dim">A resposta baseia-se diretamente nos dados retornados pela ferramenta.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 22 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 23 -->
+        <section class="slide-pane act-systems" id="slide-23" data-slide-id="23" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">MCP: Model Context Protocol</h2>
+                        <p class="slide-subtitle">Padronização de conexões entre clientes de IA e fontes de dados</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">23 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card border-rose">
+            <div class="card-tag tag-rose">CENÁRIO ANTERIOR</div>
+            <h3 class="card-title">Múltiplas Integrações Proprietárias</h3>
+            <p class="card-text">Antes de protocolos padronizados, conectar uma ferramenta (como GitHub ou Postgres) a diferentes interfaces de IA exigia implementar conectores customizados para cada cliente ou IDE.</p>
+            <p class="card-text text-dim">Isso gerava duplicação de esforço e manutenção fragmentada de integrações.</p>
+        </div>
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">PADRONIZAÇÃO CLIENTE-SERVIDOR</div>
+            <h3 class="card-title">Arquitetura Aberta MCP</h3>
+            <p class="card-text">O <strong>Model Context Protocol (MCP)</strong>, proposto pela Anthropic em 2024, padroniza a exposição de dados e ferramentas via JSON-RPC.</p>
+            <p class="card-text">Um servidor MCP é implementado uma única vez e pode ser utilizado por qualquer aplicação ou IDE compatível.</p>
+            <div class="note-pill">Padrão adotado em ambientes de desenvolvimento e ferramentas de agentes.</div>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 23 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 24 -->
+        <section class="slide-pane act-systems" id="slide-24" data-slide-id="24" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">MCP na Prática: Os 3 Primitivos da Arquitetura</h2>
+                        <p class="slide-subtitle">Resources, Tools e Prompts compondo a interface do servidor</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">24 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-three-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-blue">PRIMITIVO 1</div>
+            <h3 class="card-title">Resources</h3>
+            <p class="card-text">Dados estáticos ou dinâmicos lidos sob demanda pelo modelo como arquivos ou URIs.</p>
+            <p class="card-text text-dim"><strong>Exemplo:</strong> <code>postgres://schema/public</code> expondo a estrutura das tabelas em modo de leitura.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-green">PRIMITIVO 2</div>
+            <h3 class="card-title">Tools</h3>
+            <p class="card-text">Funções executáveis com parâmetros que realizam operações ou alterações no ambiente.</p>
+            <p class="card-text text-dim"><strong>Exemplo:</strong> <code>execute_readonly_query(sql)</code> que roda uma query filtrada com limites de tempo.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-amber">PRIMITIVO 3</div>
+            <h3 class="card-title">Prompts</h3>
+            <p class="card-text">Modelos e instruções pré-definidas no servidor para guiar o modelo em fluxos específicos.</p>
+            <p class="card-text text-dim"><strong>Exemplo:</strong> <code>diagnose_table_locks()</code> com regras para analisar bloqueios de tabelas.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 24 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 25 -->
+        <section class="slide-pane act-systems" id="slide-25" data-slide-id="25" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Vibe Coding: Características e Limitações</h2>
+                        <p class="slide-subtitle">Desenvolvimento baseado exclusivamente em prompts informais</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">25 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-rose">
+            <div class="card-tag tag-rose">DESENVOLVIMENTO SEM ESPECIFICAÇÃO</div>
+            <h3 class="card-title">Prompts Livres e Informais</h3>
+            <p class="card-text">O termo descreve a prática de desenvolvedores interagirem com a IA sem documentar requisitos prévios ou desenhar contratos de arquitetura.</p>
+            <p class="card-text">Embora permita construir protótipos em pouco tempo, a ausência de limites documentados faz o modelo tomar decisões silenciosas sobre bibliotecas e padrões de código.</p>
+            <div class="quote-box">
+                "Útil para prototipagem rápida e testes experimentais; arriscado em sistemas que exigem manutenção contínua e previsibilidade."
+            </div>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-amber">Efeitos em Projetos Maiores</h3>
+            <ul class="clean-list">
+                <li>Dificuldade da equipe em rastrear decisões tomadas pelo modelo.</li>
+                <li>Alterações não intencionais em dependências do projeto.</li>
+                <li>Remoção inadvertida de validações para contornar falhas.</li>
+                <li>Inconsistências ao compilar ou testar o projeto de forma reproduzível.</li>
+            </ul>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 25 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 26 -->
+        <section class="slide-pane act-systems" id="slide-26" data-slide-id="26" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Desenvolvimento Informal vs Especificação Técnica</h2>
+                        <p class="slide-subtitle">Comparativo entre abordagens no desenvolvimento com IA</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">26 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card border-rose">
+            <div class="card-tag tag-rose">DESENVOLVIMENTO SEM ESPECIFICAÇÃO</div>
+            <h3 class="card-title">Código como Ponto de Partida</h3>
+            <ul class="clean-list">
+                <li><strong>Definição:</strong> Instruções pontuais em linguagem natural.</li>
+                <li><strong>Escopo:</strong> Flutuante; o modelo altera arquivos conforme o prompt.</li>
+                <li><strong>Arquitetura:</strong> Variável; cada instrução pode usar padrões diferentes.</li>
+                <li><strong>Depuração:</strong> Manual, investigando o que o modelo alterou.</li>
+                <li><strong>Manutenção:</strong> Complexa à medida que o código cresce.</li>
+            </ul>
+        </div>
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">DESENVOLVIMENTO ORIENTADO A ESPECIFICAÇÕES (SDD)</div>
+            <h3 class="card-title">Especificação como Referência</h3>
+            <ul class="clean-list">
+                <li><strong>Definição:</strong> Documento técnico revisado por engenheiros.</li>
+                <li><strong>Escopo:</strong> Delimitado com requisitos e restrições claras.</li>
+                <li><strong>Arquitetura:</strong> Contratos, schemas e padrões pré-estabelecidos.</li>
+                <li><strong>Depuração:</strong> Testes automáticos e linters identificam falhas.</li>
+                <li><strong>Manutenção:</strong> Modular, orientada por especificações versionadas.</li>
+            </ul>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 26 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 27 -->
+        <section class="slide-pane act-systems" id="slide-27" data-slide-id="27" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Agent Harness: A Infraestrutura de Execução</h2>
+                        <p class="slide-subtitle">A camada de software e políticas que governa a atuação do modelo</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">27 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-blue">
+            <div class="card-tag tag-blue">CONCEITO DE HARNESS</div>
+            <h3 class="card-title">A Infraestrutura ao Redor do Modelo</h3>
+            <p class="card-text">O modelo de linguagem fornece capacidade de raciocínio e geração semântica. O <strong>Harness</strong> é a infraestrutura de software construída ao redor do modelo para torná-lo seguro e estável em um ambiente de produção.</p>
+            <p class="card-text">Ele gerencia políticas de permissão, isolamento de processos (sandboxing), manipulação de arquivos e o ciclo de vida das sessões.</p>
+            <div class="quote-box">
+                "O modelo realiza a inferência; o harness garante que as ações ocorram dentro das regras de segurança e governança da aplicação."
+            </div>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-amber">Funções Principais do Harness</h3>
+            <ul class="clean-list">
+                <li><strong>Controle do Loop:</strong> Ciclo de percepção, decisão e verificação de retorno.</li>
+                <li><strong>Gestão de Contexto:</strong> Injeção de documentação e filtragem de ruídos.</li>
+                <li><strong>Políticas de Acesso:</strong> Aprovação para comandos com efeitos colaterais.</li>
+                <li><strong>Isolamento:</strong> Execução de comandos em ambientes restritos (sandboxes).</li>
+            </ul>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 27 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 28 -->
+        <section class="slide-pane act-systems" id="slide-28" data-slide-id="28" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Camadas de Isolamento e Segurança no Harness</h2>
+                        <p class="slide-subtitle">Práticas de proteção do ambiente de desenvolvimento</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">28 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-three-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-blue">CAMADA 1</div>
+            <h3 class="card-title">Isolamento em Sandbox</h3>
+            <p class="card-text">Execução de comandos de terminal restrita a ambientes com isolamento de rede e de arquivos do sistema operacional.</p>
+            <p class="card-text text-dim">Impede que o modelo execute comandos destrutivos fora do workspace.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-amber">CAMADA 2</div>
+            <h3 class="card-title">Aprovação Humana (Human-in-the-Loop)</h3>
+            <p class="card-text">Classificação de comandos por risco. Operações de leitura são automáticas; comandos críticos exigem confirmação explícita.</p>
+            <p class="card-text text-dim">Exemplos: alterações estruturais no banco de dados ou envios para servidores remotos.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-green">CAMADA 3</div>
+            <h3 class="card-title">Filtragem de Saídas</h3>
+            <p class="card-text">Tratamento de logs extensos gerados por builds antes de inseri-los no contexto do modelo.</p>
+            <p class="card-text text-dim">O sistema extrai apenas linhas de erro relevantes (stderr), preservando a capacidade de atenção da janela.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 28 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 29 -->
+        <section class="slide-pane act-systems" id="slide-29" data-slide-id="29" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Arquitetura de Harness: Guias vs Sensores</h2>
+                        <p class="slide-subtitle">Estrutura conceitual proposta por Martin Fowler para sistemas com IA</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">29 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card border-blue">
+            <div class="card-tag tag-blue">GUIAS (CONTROLE PRÉ-AÇÃO)</div>
+            <h3 class="card-title">Restrições Anteriores à Geração</h3>
+            <p class="card-text">Diretrizes fornecidas ao modelo <strong>antes</strong> da escrita do código para delimitar seu campo de atuação:</p>
+            <ul class="clean-list">
+                <li>Documentos de especificação técnica (<code>spec.md</code>).</li>
+                <li>Regras de arquitetura do repositório (ex: "utilizar validação com Pydantic").</li>
+                <li>Definição explícita de itens fora de escopo.</li>
+            </ul>
+            <p class="text-dim">Evita que o modelo adote abordagens fora dos padrões do projeto.</p>
+        </div>
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">SENSORES (VALIDAÇÃO PÓS-AÇÃO)</div>
+            <h3 class="card-title">Verificação Posterior à Geração</h3>
+            <p class="card-text">Ferramentas de software disparadas automaticamente <strong>após</strong> a geração do código:</p>
+            <ul class="clean-list">
+                <li>Checadores de tipos estáticos (<code>tsc</code>, <code>mypy</code>).</li>
+                <li>Linters de código e segurança.</li>
+                <li>Suítes de testes unitários e de integração automatizados.</li>
+            </ul>
+            <p class="text-dim">Produzem um retorno objetivo (sucesso ou falha) sobre o resultado gerado.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 29 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 30 -->
+        <section class="slide-pane act-systems" id="slide-30" data-slide-id="30" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Guias e Sensores na Prática: O Ciclo de Auto-Correção</h2>
+                        <p class="slide-subtitle">Como testes e linters direcionam correções autônomas</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">30 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">CICLO DE FEEDBACK AUTOMATIZADO</div>
+            <div class="timeline-step">
+                <span class="step-num">1</span>
+                <div><strong>Guia ativo:</strong> A especificação determina o cálculo de troco utilizando tipos numéricos exatos.</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">2</span>
+                <div><strong>Modelo gera código:</strong> A implementação é escrita, mas utiliza um tipo float por engano.</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">3</span>
+                <div><strong>Sensor detecta falha:</strong> O checador de tipos acusa a inconsistência com código de erro.</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">4</span>
+                <div><strong>Correção:</strong> A mensagem de erro é retornada ao modelo, que refatora o código para centavos inteiros e passa no teste.</div>
+            </div>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-amber">Papel da Equipe Técnica</h3>
+            <div class="quote-box">
+                "O desenvolvedor define a especificação e os critérios de validação; o loop automatizado executa os testes e orienta o modelo nas correções necessárias."
+            </div>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 30 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 31 -->
+        <section class="slide-pane act-systems" id="slide-31" data-slide-id="31" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Skills vs Agentes: Processos Previsíveis e Exploração</h2>
+                        <p class="slide-subtitle">Diferença entre procedimentos definidos e tarefas exploratórias</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">31 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card border-blue">
+            <div class="card-tag tag-blue">SKILLS (PROCEDIMENTOS DEFINIDOS)</div>
+            <h3 class="card-title">Instruções Determinísticas</h3>
+            <p class="card-text">Pacotes estruturados de instruções para processos onde <strong>as etapas exatas já são conhecidas</strong>:</p>
+            <ul class="clean-list">
+                <li>Extrair dados tabulares de um PDF e formatar em CSV.</li>
+                <li>Gerar documentação com base em assinaturas de código.</li>
+                <li>Formatar arquivos de configuração conforme padrões estritos.</li>
+            </ul>
+            <p class="text-dim">Execução direta, menor consumo de tokens e comportamento repetível.</p>
+        </div>
+        <div class="col-card border-amber">
+            <div class="card-tag tag-amber">AGENTES (RESOLUÇÃO DE PROBLEMAS)</div>
+            <h3 class="card-title">Tarefas Exploratórias</h3>
+            <p class="card-text">Sistemas com capacidade de decisão desenhados para <strong>investigar problemas não lineares</strong>:</p>
+            <ul class="clean-list">
+                <li>Diagnosticar a causa de erros HTTP 500 sob carga em ambiente de homologação.</li>
+                <li>Analisar causas de vazamento de memória em arquivos de perfilamento.</li>
+                <li>Planejar a refatoração de um módulo legado entre diferentes serviços.</li>
+            </ul>
+            <p class="text-dim">O agente formula hipóteses, inspeciona saídas de comandos e adapta os passos conforme os retornos.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 31 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 32 -->
+        <section class="slide-pane act-systems" id="slide-32" data-slide-id="32" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Subagentes e Isolamento de Contexto</h2>
+                        <p class="slide-subtitle">Divisão de trabalho em tarefas focadas para evitar sobrecarga de memória</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">32 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">SEPARAÇÃO DE CONTEXTO</div>
+            <h3 class="card-title">Tarefas com Janelas Limpas</h3>
+            <p class="card-text">Em tarefas que exigem consultar muitos arquivos, manter todo o histórico em uma única sessão sobrecarrega a janela de contexto e reduz a precisão do modelo.</p>
+            <p class="card-text">A prática de <strong>Subagentes</strong> consiste em delegar partes da atividade a instâncias isoladas com contexto limpo. Ao final, o subagente retorna apenas o resultado sintetizado para o coordenador.</p>
+            <div class="note-pill">Dados intermediários de leitura são descartados ao término da subtarefa, mantendo a janela principal organizada.</div>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-blue">Exemplo de Execução Paralela</h3>
+            <div class="timeline-step">
+                <span class="step-num">A</span>
+                <div><strong>Subagente Banco de Dados:</strong> Analisa schemas e índices das tabelas.</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">B</span>
+                <div><strong>Subagente Frontend:</strong> Prepara os componentes de interface correspondentes.</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">★</span>
+                <div><strong>Coordenador:</strong> Recebe apenas os resumos consolidados de cada parte para dar continuidade.</div>
+            </div>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 32 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 33 -->
+        <section class="slide-pane act-systems" id="slide-33" data-slide-id="33" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">AGENTS.md: Documentação de Contexto para Agentes</h2>
+                        <p class="slide-subtitle">Organização do repositório para acesso sob demanda</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">33 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card border-rose">
+            <div class="card-tag tag-rose">PROMPTS MONOLÍTICOS</div>
+            <h3 class="card-title">Inserção de Múltiplos Manuais no Contexto</h3>
+            <p class="card-text">Inserir manuais inteiros, diretrizes completas e múltiplos arquivos de código em um único prompt ocupa a janela de contexto logo no início da sessão.</p>
+            <p class="card-text text-dim">Isso eleva os custos de tokens e dispersa a atenção do modelo sobre regras específicas.</p>
+        </div>
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">ÍNDICE DE CONTEXTO (AGENTS.md)</div>
+            <h3 class="card-title">Estrutura Enxuta com Ponteiros</h3>
+            <p class="card-text">O arquivo <code>AGENTS.md</code> na raiz do projeto orienta o agente com <strong>instruções fundamentais e ponteiros de documentação</strong>:</p>
+            <ul class="clean-list">
+                <li>Comandos de build, testes e formatação do repositório.</li>
+                <li>Caminhos para especificações detalhadas de cada módulo.</li>
+                <li>Critérios para consulta a documentações externas quando necessário.</li>
+            </ul>
+            <div class="note-pill">O modelo lê documentações extensas sob demanda, mantendo a janela enxuta.</div>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 33 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 34 -->
+        <section class="slide-pane act-systems" id="slide-34" data-slide-id="34" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Paradigma RPI: Research, Plan, Implement</h2>
+                        <p class="slide-subtitle">Estratégia em etapas para alterações em sistemas de maior escala</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">34 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-three-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-blue">FASE 1</div>
+            <h3 class="card-title">Pesquisa (Research)</h3>
+            <p class="card-text">O agente mapeia a base de código, dependências e regras existentes no repositório.</p>
+            <p class="card-text text-dim">Registra as descobertas em arquivos Markdown e encerra a sessão inicial de exploração.</p>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-amber">FASE 2</div>
+            <h3 class="card-title">Planejamento (Plan)</h3>
+            <p class="card-text">Uma nova sessão limpa consome o relatório da pesquisa para elaborar a especificação técnica e a lista de tarefas (<code>tasks.md</code>).</p>
+            <p class="card-text text-dim">As decisões de arquitetura são alinhadas e validadas antes do código.</p>
+        </div>
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">FASE 3</div>
+            <h3 class="card-title">Implementação (Implement)</h3>
+            <p class="card-text">Subagentes executam tarefas atômicas com janelas de contexto restritas.</p>
+            <p class="card-text text-dim">Cada tarefa é verificada por testes automatizados antes da conclusão.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 34 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 35 -->
+        <section class="slide-pane act-systems" id="slide-35" data-slide-id="35" data-act="ATO 2: SISTEMAS & TERMOS">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 2: SISTEMAS & TERMOS</span>
+                        <h2 class="slide-title">Spec-Driven Development (SDD): Fundamentos</h2>
+                        <p class="slide-subtitle">A especificação técnica estruturada como base para a geração de código</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">35 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">MUDANÇA DE PARADIGMA</div>
+            <h3 class="card-title">Especificação como Fonte Primária</h3>
+            <p class="card-text">No Spec-Driven Development, a especificação técnica formal (em Markdown) é a fonte primária da verdade do projeto.</p>
+            <p class="card-text">O código-fonte é gerado e testado em conformidade estrita com essa especificação, sendo validado continuamente por ferramentas determinísticas.</p>
+            <div class="quote-box">
+                "Uma especificação clara com regras e critérios de aceite objetivos permite que o agente gere código de forma estável e previsível."
+            </div>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-amber">Os 4 Artefatos do Ciclo</h3>
+            <ul class="clean-list">
+                <li><code>spec.md</code>: Requisitos de negócio e delimitação de escopo.</li>
+                <li><code>plan.md</code>: Decisões técnicas, contratos de API e modelos.</li>
+                <li><code>tasks.md</code>: Decomposição em tarefas sequenciais e paralelas.</li>
+                <li><code>state.md</code>: Registro de progresso e decisões intermediárias.</li>
+            </ul>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 35 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 36 -->
+        <section class="slide-pane act-sdd" id="slide-36" data-slide-id="36" data-act="ATO 3: SDD NA PRÁTICA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 3: SDD NA PRÁTICA</span>
+                        <h2 class="slide-title">Caso Prático: Sistema de Ponto de Vendas (PDV)</h2>
+                        <p class="slide-subtitle">Estudo de caso: Construção do checkout de loja com especificação formal</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">36 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-amber">
+            <div class="card-tag tag-amber">REQUISITOS DO SISTEMA</div>
+            <h3 class="card-title">Checkout de Caixa de Loja</h3>
+            <p class="card-text">O objetivo é implementar o módulo central de um <strong>PDV de varejo</strong> com requisitos operacionais bem definidos:</p>
+            <ul class="clean-list">
+                <li>Leitura de produtos por código de barras EAN-13 e SKU.</li>
+                <li>Gestão de carrinho e cálculo de subtotais.</li>
+                <li>Suporte a múltiplos métodos de pagamento (Dinheiro, Cartão e Pix).</li>
+                <li>Cálculo de troco com precisão monetária sem erros de ponto flutuante.</li>
+                <li>Baixa de estoque local com controle de concorrência.</li>
+            </ul>
+        </div>
+        <div class="col-card border-rose">
+            <h3 class="card-title text-rose">Riscos de Desenvolver sem Especificação</h3>
+            <p class="card-text">Ao solicitar a implementação sem regras formais prévias, o modelo pode adotar práticas inadequadas:</p>
+            <ul class="clean-list">
+                <li>Utilizar tipos float binários para valores monetários, causando inconsistências de centavos.</li>
+                <li>Não tratar concorrência na reserva e baixa de estoque.</li>
+                <li>Adicionar dependências ou funcionalidades fora do escopo previsto.</li>
+            </ul>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 36 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 37 -->
+        <section class="slide-pane act-sdd" id="slide-37" data-slide-id="37" data-act="ATO 3: SDD NA PRÁTICA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 3: SDD NA PRÁTICA</span>
+                        <h2 class="slide-title">O Ciclo dos 4 Artefatos no PDV</h2>
+                        <p class="slide-subtitle">Fluxo de documentação técnica que orienta a implementação</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">37 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-blue">
+            <div class="card-tag tag-blue">ETAPAS DE DOCUMENTAÇÃO</div>
+            <div class="timeline-step">
+                <span class="step-num">1</span>
+                <div><strong>spec.md (Requisitos):</strong> Problema do operador, regras de troco e limites do que não será feito.</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">2</span>
+                <div><strong>plan.md (Arquitetura):</strong> Padrão arquitetural, modelos relacionais e contratos de API.</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">3</span>
+                <div><strong>tasks.md (Atividades):</strong> Lista de tarefas atômicas classificadas como <code>[seq]</code> e <code>[par]</code> associadas a testes.</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">4</span>
+                <div><strong>state.md (Estado):</strong> Registro de decisões técnicas tomadas durante a implementação e progresso atual.</div>
+            </div>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-green">Garantia de Processo</h3>
+            <div class="quote-box">
+                "A implementação só começa após a aprovação da especificação e do plano técnico. Cada tarefa só é concluída após a validação dos testes."
+            </div>
+            <p class="card-text text-dim">Essa estrutura reduz retrabalho e evita desvios em relação às regras de negócio.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 37 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 38 -->
+        <section class="slide-pane act-sdd" id="slide-38" data-slide-id="38" data-act="ATO 3: SDD NA PRÁTICA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 3: SDD NA PRÁTICA</span>
+                        <h2 class="slide-title">Artefato 1: spec.md — Estrutura e Escopo</h2>
+                        <p class="slide-subtitle">Definindo objetivos e limites do sistema de caixa</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">38 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card border-blue">
+            <div class="card-tag tag-blue">spec.md • ESTRUTURA INICIAL</div>
+            <div class="code-box">
+# Especificação: Ponto de Vendas (PDV)
+## 1. Problema de Negócio
+Atendentes de caixa necessitam de registro ágil de itens
+em períodos de pico, garantindo consistência no cálculo
+de troco e no estoque.
+
+## 2. Escopo do Módulo
+- Leitura de código de barras EAN-13 e busca por SKU.
+- Gestão de carrinho (inserir, remover item, aplicar cupom).
+- Checkout com múltiplos pagamentos (Dinheiro, Cartão, Pix).
+- Baixa automática de estoque e cálculo de troco.
+            </div>
+            <p class="text-dim">Instruções claras delimitando os objetivos prioritários da entrega.</p>
+        </div>
+        <div class="col-card border-rose">
+            <div class="card-tag tag-rose">DELIMITAÇÃO EXPLÍCITA</div>
+            <h3 class="card-title">Definição de Fora de Escopo</h3>
+            <p class="card-text">Parte fundamental da especificação é definir com clareza o que não faz parte da entrega:</p>
+            <div class="code-box">
+## 3. Fora de Escopo (Explicitamente Proibido)
+- NÃO implementar emissão de NF-e / NFC-e SEFAZ nesta fase.
+- NÃO criar módulo de compras ou cadastro de fornecedores.
+- NÃO implementar autenticação biométrica ou controle de ponto.
+- NÃO integrar com ERPs legados externos via SOAP.
+            </div>
+            <p class="text-dim">Evita que o modelo gere código ou dependências fora do objetivo atual.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 38 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 39 -->
+        <section class="slide-pane act-sdd" id="slide-39" data-slide-id="39" data-act="ATO 3: SDD NA PRÁTICA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 3: SDD NA PRÁTICA</span>
+                        <h2 class="slide-title">Artefato 1: spec.md — User Stories e Regras</h2>
+                        <p class="slide-subtitle">Critérios de aceite objetivos para verificação automatizada</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">39 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-amber">USER STORIES OPERACIONAIS</div>
+            <div class="code-box">
+### User Story 01: Leitura de Produto
+Como operador de caixa, quero escanear o código de barras
+EAN-13 para que o item seja adicionado ao carrinho com
+nome, quantidade padrão 1 e valor unitário.
+
+### User Story 02: Pagamento Misto e Troco
+Como operador de caixa, quero receber parte do valor em
+dinheiro e o restante no Pix, com o sistema calculando o
+troco imediatamente se a quantia em espécie exceder o total.
+            </div>
+        </div>
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">REGRAS DE NEGÓCIO OBRIGATÓRIAS</div>
+            <div class="code-box">
+### Regras de Negócio Obrigatórias
+1. Precisão Contábil: Todos os valores monetários devem ser
+   armazenados em CENTAVOS INTEIROS (integers) ou Decimal(12,2).
+   Proibido o uso de ponto flutuante binário (float).
+2. Trava de Estoque: Uma venda não pode ser concluída se a
+   quantidade de qualquer item for superior ao saldo atual.
+3. Troco Positivo: Troco só é calculado se o total pago em
+   espécie for maior que o saldo restante da venda.
+            </div>
+            <p class="text-dim">Regras verificadas diretamente pelos testes automatizados.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 39 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 40 -->
+        <section class="slide-pane act-sdd" id="slide-40" data-slide-id="40" data-act="ATO 3: SDD NA PRÁTICA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 3: SDD NA PRÁTICA</span>
+                        <h2 class="slide-title">Artefato 2: plan.md — Arquitetura Técnica</h2>
+                        <p class="slide-subtitle">Padrões arquiteturais, stack e divisão de responsabilidades</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">40 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card border-blue">
+            <div class="card-tag tag-blue">plan.md • ARQUITETURA ESCOLHIDA</div>
+            <h3 class="card-title">Arquitetura Hexagonal (Ports & Adapters)</h3>
+            <p class="card-text">Isolamento da lógica de domínio (troco, descontos, regras de carrinho) em relação a integrações externas:</p>
+            <ul class="clean-list">
+                <li><strong>Domínio:</strong> Entidades e cálculos puros, sem acoplamento a frameworks.</li>
+                <li><strong>Portas de Entrada:</strong> Controladores REST da API.</li>
+                <li><strong>Portas de Saída:</strong> Repositórios de dados e adaptadores de pagamento.</li>
+            </ul>
+            <div class="note-pill">Permite testar regras de negócio de forma isolada e rápida.</div>
+        </div>
+        <div class="col-card">
+            <div class="card-tag tag-green">DECISÕES TÉCNICAS (ADR)</div>
+            <div class="code-box">
+## Decisões Técnicas Registradas
+- Backend: Python 3.12 com FastAPI e Pydantic v2.
+- Banco de Dados: SQLite em modo WAL (Write-Ahead Logging)
+  para o terminal de caixa local.
+- Concorrência: Transações imediatas com locks apropriados
+  para evitar reservas concorrentes acima do saldo.
+- Validação: Schemas com validação estrita em todas as entradas.
+            </div>
+            <p class="text-dim">Define as escolhas técnicas antes do início da implementação.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 40 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 41 -->
+        <section class="slide-pane act-sdd" id="slide-41" data-slide-id="41" data-act="ATO 3: SDD NA PRÁTICA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 3: SDD NA PRÁTICA</span>
+                        <h2 class="slide-title">Artefato 2: plan.md — Modelo de Dados e Contratos</h2>
+                        <p class="slide-subtitle">Estrutura das tabelas relacionais e schemas das rotas</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">41 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-amber">MODELAGEM RELACIONAL (DDL)</div>
+            <div class="code-box">
+CREATE TABLE produtos (
+    id TEXT PRIMARY KEY,
+    sku TEXT UNIQUE NOT NULL,
+    ean13 TEXT UNIQUE NOT NULL,
+    descricao TEXT NOT NULL,
+    preco_centavos INTEGER NOT NULL,
+    estoque_atual INTEGER NOT NULL CHECK (estoque_atual >= 0)
+);
+
+CREATE TABLE vendas (
+    id TEXT PRIMARY KEY,
+    data_hora TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status TEXT NOT NULL, -- PENDENTE, PAGO, CANCELADO
+    total_centavos INTEGER NOT NULL
+);
+            </div>
+        </div>
+        <div class="col-card border-blue">
+            <div class="card-tag tag-blue">CONTRATO DE API (SCHEMA JSON)</div>
+            <div class="code-box">
+// POST /api/v1/checkout
+{
+  "carrinho_id": "cart_88392",
+  "pagamentos": [
+    { "metodo": "DINHEIRO", "valor_centavos": 5000 },
+    { "metodo": "PIX", "valor_centavos": 3500 }
+  ]
+}
+
+// Resposta: HTTP 200 OK
+{
+  "venda_id": "vnd_10294",
+  "total_devido": 8500,
+  "total_pago": 8500,
+  "troco_centavos": 0,
+  "status": "CONCLUIDA"
+}
+            </div>
+            <p class="text-dim">Contrato definido que serve de base para testes de integração.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 41 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 42 -->
+        <section class="slide-pane act-sdd" id="slide-42" data-slide-id="42" data-act="ATO 3: SDD NA PRÁTICA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 3: SDD NA PRÁTICA</span>
+                        <h2 class="slide-title">Artefato 3: tasks.md — Decomposição em Tarefas</h2>
+                        <p class="slide-subtitle">Divisão do trabalho em itens sequenciais e paralelos</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">42 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">tasks.md • ESTRUTURA OPERACIONAL</div>
+            <div class="code-box">
+# Tarefas de Implementação: Sistema PDV
+
+## Fase 1: Infraestrutura & Modelos
+- [seq] T01: Criar schema SQLite com tabelas em centavos e CHECK de estoque.
+- [par] T02: Implementar validador de dígitos verificadores de EAN-13.
+- [par] T03: Criar mock do gerador de QR Code Pix estático (Payload EMV).
+
+## Fase 2: Serviços de Domínio
+- [seq] T04: Implementar carrinho em memória com cálculo transacional de troco.
+- [seq] T05: Criar serviço de checkout com controle transacional de estoque.
+
+## Fase 3: Exposição de API & Validação
+- [par] T06: Criar endpoints FastAPI documentados com schemas Pydantic.
+- [seq] T07: Executar suíte completa de testes de concorrência e carga.
+            </div>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-blue">Significado das Tags</h3>
+            <div class="timeline-step">
+                <span class="step-num">seq</span>
+                <div><strong>[seq] Sequencial:</strong> Tarefa com dependência direta; executada após a anterior ser validada.</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">par</span>
+                <div><strong>[par] Paralelizável:</strong> Tarefa independente; pode ser executada por subagentes em paralelo.</div>
+            </div>
+            <div class="note-pill">Organização de ordem técnica: banco e modelos antes dos serviços de API.</div>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 42 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 43 -->
+        <section class="slide-pane act-sdd" id="slide-43" data-slide-id="43" data-act="ATO 3: SDD NA PRÁTICA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 3: SDD NA PRÁTICA</span>
+                        <h2 class="slide-title">Artefato 3: tasks.md — Critérios e Testes</h2>
+                        <p class="slide-subtitle">Associação direta de cada tarefa ao seu teste automatizado</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">43 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card">
+            <div class="card-tag tag-green">TESTES VINCULADOS A CADA TAREFA</div>
+            <div class="code-box">
+### Detalhamento da Tarefa T04: Cálculo de Troco
+- Arquivo alvo: `app/domain/calculadora_troco.py`
+- Regra: Entradas inteiras em centavos; retorno de troco exato.
+- **Comando de Teste:**
+  `pytest tests/unit/test_troco.py -v`
+
+### Detalhamento da Tarefa T05: Baixa de Estoque
+- Arquivo alvo: `app/services/checkout_service.py`
+- Regra: Reverter transação se qualquer item não possuir saldo.
+- **Comando de Teste:**
+  `pytest tests/integration/test_reserva_estoque.py`
+            </div>
+        </div>
+        <div class="col-card border-blue">
+            <div class="card-tag tag-blue">TESTE UNITÁRIO DETERMINÍSTICO</div>
+            <div class="code-box">
+def test_calculo_troco_precisao_centavos():
+    total_conta = 1999 # R$ 19,99
+    pago_dinheiro = 2000 # R$ 20,00
+    troco = calcular_troco(total_conta, pago_dinheiro)
+    
+    assert troco == 1 # Exatamente R$ 0,01
+    assert type(troco) is int # Garante tipo numérico inteiro
+
+def test_bloqueio_estoque_insuficiente():
+    with pytest.raises(EstoqueInsuficienteException):
+        checkout(carrinho_com_item_sem_saldo)
+            </div>
+            <p class="text-dim">O teste valida objetivamente o comportamento do código em relação à regra de negócio.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 43 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 44 -->
+        <section class="slide-pane act-sdd" id="slide-44" data-slide-id="44" data-act="ATO 3: SDD NA PRÁTICA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 3: SDD NA PRÁTICA</span>
+                        <h2 class="slide-title">Artefato 4: state.md — Registro de Estado</h2>
+                        <p class="slide-subtitle">Documentação do progresso, decisões técnicas e pendências</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">44 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-blue">
+            <div class="card-tag tag-blue">state.md • REGISTRO DE EXECUÇÃO</div>
+            <div class="code-box">
+# Estado da Execução: PDV Inteligente
+**Data:** 17/09/2026 | **Último Commit:** 71a8f01
+
+## 1. Progresso das Tarefas
+- [X] T01: Schema SQLite criado com constraints de integridade.
+- [X] T02: Validador de EAN-13 implementado com testes aprovados.
+- [X] T03: Mock de Pix EMV implementado.
+- [>] T04: Serviço de Troco EM ANDAMENTO (ajustando validação).
+- [ ] T05 a T07: PENDENTES.
+
+## 2. Decisões Técnicas Registradas (ADR)
+- ADR-01: Adoção de inteiros (centavos) para acelerar agregações
+  no SQLite e evitar erros de ponto flutuante.
+- ADR-02: Validador de EAN-13 exige tratamento para códigos com 12 dígitos.
+            </div>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-green">Utilidade do Arquivo de Estado</h3>
+            <div class="quote-box">
+                "O state.md documenta o contexto das decisões intermediárias, permitindo que a equipe acompanhe o raciocínio aplicado durante o desenvolvimento."
+            </div>
+            <p class="card-text text-dim">Oferece transparência e rastreabilidade para o líder técnico do projeto.</p>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 44 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 45 -->
+        <section class="slide-pane act-sdd" id="slide-45" data-slide-id="45" data-act="ATO 3: SDD NA PRÁTICA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 3: SDD NA PRÁTICA</span>
+                        <h2 class="slide-title">Artefato 4: state.md — Continuidade entre Sessões</h2>
+                        <p class="slide-subtitle">Retomada do desenvolvimento sem perda de informações</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">45 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-two-columns">
+                    
+        <div class="col-card border-rose">
+            <div class="card-tag tag-rose">PERDA DE CONTEXTO EM SESSÕES ISOLADAS</div>
+            <h3 class="card-title">Interrupções de Trabalho</h3>
+            <p class="card-text">Em conversas convencionais de chat, ao fechar a janela ou iniciar uma nova sessão, o histórico de raciocínio construído não é preservado.</p>
+            <p class="card-text text-dim">Em uma nova interação, é necessário explicar novamente regras que já haviam sido acordadas, aumentando o risco de retrabalho.</p>
+        </div>
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">RETOMADA COM ARQUIVOS SDD</div>
+            <h3 class="card-title">Continuidade Baseada em Arquivos</h3>
+            <p class="card-text">Ao iniciar uma nova sessão, o agente lê diretamente os arquivos estruturados em Markdown:</p>
+            <ul class="clean-list">
+                <li>Lê <code>spec.md</code> para compreender o escopo do negócio.</li>
+                <li>Lê <code>plan.md</code> para seguir a arquitetura definida.</li>
+                <li>Lê <code>state.md</code> e identifica que deve continuar a partir da tarefa <strong>T04</strong>.</li>
+            </ul>
+            <div class="note-pill">O trabalho é retomado a partir do ponto exato onde foi pausado.</div>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 45 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 46 -->
+        <section class="slide-pane act-sdd" id="slide-46" data-slide-id="46" data-act="ATO 3: SDD NA PRÁTICA">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ATO 3: SDD NA PRÁTICA</span>
+                        <h2 class="slide-title">Validação em Ação: Guias e Testes no PDV</h2>
+                        <p class="slide-subtitle">Execução do loop de desenvolvimento com verificação automática</p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">46 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-split-60-40">
+                    
+        <div class="col-card border-green">
+            <div class="card-tag tag-green">EXECUÇÃO DO LOOP</div>
+            <div class="timeline-step">
+                <span class="step-num">1</span>
+                <div><strong>Agente identifica tarefa:</strong> T04 em <code>tasks.md</code> (Cálculo de Troco).</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">2</span>
+                <div><strong>Código gerado com desvio:</strong> Utiliza divisão com float: <code>troco = valor_pago - total</code>.</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">3</span>
+                <div><strong>Teste acusa falha:</strong> <code>pytest tests/unit/test_troco.py</code> falha na checagem de precisão decimal.</div>
+            </div>
+            <div class="timeline-step">
+                <span class="step-num">4</span>
+                <div><strong>Auto-correção:</strong> O agente consulta o Guia (<code>spec.md</code>), ajusta para centavos inteiros e o teste passa com sucesso.</div>
+            </div>
+        </div>
+        <div class="col-card">
+            <h3 class="card-title text-amber">Vantagem da Metodologia</h3>
+            <div class="quote-box">
+                "O código defeituoso não chega nem no repositório. Os sensores atuaram fiscalizando e a especificação agiu como autoridade."
+            </div>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 46 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+        <!-- SLIDE 47 -->
+        <section class="slide-pane act-sdd" id="slide-47" data-slide-id="47" data-act="ENCERRAMENTO">
+            <div class="slide-inner">
+                <header class="slide-header">
+                    <div class="header-left">
+                        <span class="act-pill">ENCERRAMENTO</span>
+                        <h2 class="slide-title">Obrigado pela presença</h2>
+                        <p class="slide-subtitle"></p>
+                    </div>
+                    <div class="header-right">
+                        <span class="slide-index-badge">47 / 47</span>
+                    </div>
+                </header>
+                
+                <main class="slide-body layout-hero">
+                    
+        <div class="hero-center" style="gap: 4vmin;">
+            <h1 class="hero-title" style="font-size: clamp(40px, 6.2vmin, 68px);">Obrigado pela presença</h1>
+            
+            <div style="display: flex; gap: 3vmin; justify-content: center; width: 100%; max-width: 800px; margin-top: 1vmin;">
+                <div class="col-card border-rose" style="flex: 1; align-items: center; justify-content: center; text-align: center; padding: 3.2vmin 2vmin; gap: 1.4vmin;">
+                    <div class="card-tag tag-rose" style="font-size: clamp(14px, 1.8vmin, 20px);">▶ YOUTUBE</div>
+                    <div style="font-size: clamp(24px, 3.2vmin, 38px); font-weight: 800; color: var(--text-heading);">AnastaciusX</div>
+                </div>
+                
+                <div class="col-card border-amber" style="flex: 1; align-items: center; justify-content: center; text-align: center; padding: 3.2vmin 2vmin; gap: 1.4vmin;">
+                    <div class="card-tag tag-amber" style="font-size: clamp(14px, 1.8vmin, 20px);">📷 INSTAGRAM</div>
+                    <div style="font-size: clamp(24px, 3.2vmin, 38px); font-weight: 800; color: var(--text-heading);">AnastaciusX</div>
+                </div>
+            </div>
+        </div>
+        
+                </main>
+                
+                <footer class="slide-footer">
+                    <div class="footer-left">
+                        <span class="footer-crumb">Palestra IA & Engenharia SDD</span>
+                    </div>
+                    <div class="footer-center">
+                        <span class="keyboard-hints">Teclas: [←] Anterior | [→] Próximo | [M] Menu Geral | [F] Tela Cheia</span>
+                    </div>
+                    <div class="footer-right">
+                        <span class="slide-status-text">Slide 47 de 47</span>
+                    </div>
+                </footer>
+            </div>
+        </section>
+        
+    </main>
+
+    <!-- Toolbar de Controles Inferior -->
+    <nav class="controls-toolbar" aria-label="Controles da Apresentação">
+        <button class="ctrl-btn" onclick="prevSlide()" aria-label="Slide Anterior (Seta Esquerda)">← Anterior</button>
+        <button class="ctrl-btn" onclick="nextSlide()" aria-label="Próximo Slide (Seta Direita)">Próximo →</button>
+        <button class="ctrl-btn" onclick="toggleOverview()" aria-label="Menu Geral de Slides (Tecla M)">☰ Índice</button>
+        <button class="ctrl-btn" onclick="toggleFullscreen()" aria-label="Tela Cheia (Tecla F)">⛶ Tela Cheia</button>
+    </nav>
+
+    <!-- Modal Drawer de Índice -->
+    <div id="overview-modal" role="dialog" aria-modal="true" aria-label="Índice Completo da Apresentação">
+        <div class="modal-top">
+            <h2 class="modal-title">Índice da Apresentação (47 Slides)</h2>
+            <button class="ctrl-btn" onclick="toggleOverview()" aria-label="Fechar Índice">✕ Fechar (Esc)</button>
+        </div>
+        <div class="modal-grid">
+            
+        <button class="menu-slide-btn" onclick="jumpToSlide(1)" aria-label="Ir para slide 1: Da Teoria ao Código Autônomo">
+            <div class="menu-btn-top">
+                <span class="menu-num">01</span>
+                <span class="menu-badge badge-int">ABERTURA</span>
+            </div>
+            <div class="menu-title">Da Teoria ao Código Autônomo</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(2)" aria-label="Ir para slide 2: O Mapa da Apresentação">
+            <div class="menu-btn-top">
+                <span class="menu-num">02</span>
+                <span class="menu-badge badge-int">ABERTURA</span>
+            </div>
+            <div class="menu-title">O Mapa da Apresentação</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(3)" aria-label="Ir para slide 3: O Ponto de Inflexão">
+            <div class="menu-btn-top">
+                <span class="menu-num">03</span>
+                <span class="menu-badge badge-int">ABERTURA</span>
+            </div>
+            <div class="menu-title">O Ponto de Inflexão</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(4)" aria-label="Ir para slide 4: 1950 – 1956: A Fundação Teórica e o Início da Disciplina">
+            <div class="menu-btn-top">
+                <span class="menu-num">04</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">1950 – 1956: A Fundação Teórica e o Início da Disciplina</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(5)" aria-label="Ir para slide 5: 1956 – 1966: A Era Simbólica e os Primeiros Programas">
+            <div class="menu-btn-top">
+                <span class="menu-num">05</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">1956 – 1966: A Era Simbólica e os Primeiros Programas</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(6)" aria-label="Ir para slide 6: 1969 – 1974: Rigor de Software e o Primeiro Inverno da IA">
+            <div class="menu-btn-top">
+                <span class="menu-num">06</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">1969 – 1974: Rigor de Software e o Primeiro Inverno da IA</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(7)" aria-label="Ir para slide 7: 1975 – 1986: Sistemas Especialistas e o Backpropagation">
+            <div class="menu-btn-top">
+                <span class="menu-num">07</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">1975 – 1986: Sistemas Especialistas e o Backpropagation</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(8)" aria-label="Ir para slide 8: 1987 – 1993: O Segundo Inverno e a Mudança de Hardware">
+            <div class="menu-btn-top">
+                <span class="menu-num">08</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">1987 – 1993: O Segundo Inverno e a Mudança de Hardware</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(9)" aria-label="Ir para slide 9: 1990 – 1997: Métodos Estatísticos e Marcos Computacionais">
+            <div class="menu-btn-top">
+                <span class="menu-num">09</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">1990 – 1997: Métodos Estatísticos e Marcos Computacionais</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(10)" aria-label="Ir para slide 10: 2004 – 2006: Especificações Verificáveis e o Deep Learning">
+            <div class="menu-btn-top">
+                <span class="menu-num">10</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">2004 – 2006: Especificações Verificáveis e o Deep Learning</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(11)" aria-label="Ir para slide 11: 2010 – 2012: Escala de Dados, GPUs e a AlexNet">
+            <div class="menu-btn-top">
+                <span class="menu-num">11</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">2010 – 2012: Escala de Dados, GPUs e a AlexNet</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(12)" aria-label="Ir para slide 12: 2014 – 2016: Modelos Generativos e Jogos de Estratégia">
+            <div class="menu-btn-top">
+                <span class="menu-num">12</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">2014 – 2016: Modelos Generativos e Jogos de Estratégia</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(13)" aria-label="Ir para slide 13: 2017: 'Attention Is All You Need' — O Transformer">
+            <div class="menu-btn-top">
+                <span class="menu-num">13</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">2017: 'Attention Is All You Need' — O Transformer</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(14)" aria-label="Ir para slide 14: 2018 – 2019: Modelos Pré-Treinados e Tokenização">
+            <div class="menu-btn-top">
+                <span class="menu-num">14</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">2018 – 2019: Modelos Pré-Treinados e Tokenização</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(15)" aria-label="Ir para slide 15: 2020 – 2021: Modelos de Larga Escala e Alinhamento">
+            <div class="menu-btn-top">
+                <span class="menu-num">15</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">2020 – 2021: Modelos de Larga Escala e Alinhamento</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(16)" aria-label="Ir para slide 16: Novembro de 2022: O Lançamento do ChatGPT">
+            <div class="menu-btn-top">
+                <span class="menu-num">16</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">Novembro de 2022: O Lançamento do ChatGPT</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(17)" aria-label="Ir para slide 17: Síntese do Ato 1: A Trajetória da IA">
+            <div class="menu-btn-top">
+                <span class="menu-num">17</span>
+                <span class="menu-badge badge-hist">ATO 1: HISTÓRIA DA IA</span>
+            </div>
+            <div class="menu-title">Síntese do Ato 1: A Trajetória da IA</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(18)" aria-label="Ir para slide 18: 2022 a 2026: Da Conversa à Ação">
+            <div class="menu-btn-top">
+                <span class="menu-num">18</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">2022 a 2026: Da Conversa à Ação</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(19)" aria-label="Ir para slide 19: Fundamentos: Modelos de Linguagem e Tokens">
+            <div class="menu-btn-top">
+                <span class="menu-num">19</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Fundamentos: Modelos de Linguagem e Tokens</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(20)" aria-label="Ir para slide 20: Limitações Técnicas: Janela de Contexto e Alucinações">
+            <div class="menu-btn-top">
+                <span class="menu-num">20</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Limitações Técnicas: Janela de Contexto e Alucinações</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(21)" aria-label="Ir para slide 21: Function Calling (Tool Use): Execução de Ferramentas">
+            <div class="menu-btn-top">
+                <span class="menu-num">21</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Function Calling (Tool Use): Execução de Ferramentas</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(22)" aria-label="Ir para slide 22: Function Calling na Prática: Fluxo em 4 Etapas">
+            <div class="menu-btn-top">
+                <span class="menu-num">22</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Function Calling na Prática: Fluxo em 4 Etapas</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(23)" aria-label="Ir para slide 23: MCP: Model Context Protocol">
+            <div class="menu-btn-top">
+                <span class="menu-num">23</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">MCP: Model Context Protocol</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(24)" aria-label="Ir para slide 24: MCP na Prática: Os 3 Primitivos da Arquitetura">
+            <div class="menu-btn-top">
+                <span class="menu-num">24</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">MCP na Prática: Os 3 Primitivos da Arquitetura</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(25)" aria-label="Ir para slide 25: Vibe Coding: Características e Limitações">
+            <div class="menu-btn-top">
+                <span class="menu-num">25</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Vibe Coding: Características e Limitações</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(26)" aria-label="Ir para slide 26: Desenvolvimento Informal vs Especificação Técnica">
+            <div class="menu-btn-top">
+                <span class="menu-num">26</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Desenvolvimento Informal vs Especificação Técnica</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(27)" aria-label="Ir para slide 27: Agent Harness: A Infraestrutura de Execução">
+            <div class="menu-btn-top">
+                <span class="menu-num">27</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Agent Harness: A Infraestrutura de Execução</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(28)" aria-label="Ir para slide 28: Camadas de Isolamento e Segurança no Harness">
+            <div class="menu-btn-top">
+                <span class="menu-num">28</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Camadas de Isolamento e Segurança no Harness</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(29)" aria-label="Ir para slide 29: Arquitetura de Harness: Guias vs Sensores">
+            <div class="menu-btn-top">
+                <span class="menu-num">29</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Arquitetura de Harness: Guias vs Sensores</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(30)" aria-label="Ir para slide 30: Guias e Sensores na Prática: O Ciclo de Auto-Correção">
+            <div class="menu-btn-top">
+                <span class="menu-num">30</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Guias e Sensores na Prática: O Ciclo de Auto-Correção</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(31)" aria-label="Ir para slide 31: Skills vs Agentes: Processos Previsíveis e Exploração">
+            <div class="menu-btn-top">
+                <span class="menu-num">31</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Skills vs Agentes: Processos Previsíveis e Exploração</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(32)" aria-label="Ir para slide 32: Subagentes e Isolamento de Contexto">
+            <div class="menu-btn-top">
+                <span class="menu-num">32</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Subagentes e Isolamento de Contexto</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(33)" aria-label="Ir para slide 33: AGENTS.md: Documentação de Contexto para Agentes">
+            <div class="menu-btn-top">
+                <span class="menu-num">33</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">AGENTS.md: Documentação de Contexto para Agentes</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(34)" aria-label="Ir para slide 34: Paradigma RPI: Research, Plan, Implement">
+            <div class="menu-btn-top">
+                <span class="menu-num">34</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Paradigma RPI: Research, Plan, Implement</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(35)" aria-label="Ir para slide 35: Spec-Driven Development (SDD): Fundamentos">
+            <div class="menu-btn-top">
+                <span class="menu-num">35</span>
+                <span class="menu-badge badge-sys">ATO 2: SISTEMAS & TERMOS</span>
+            </div>
+            <div class="menu-title">Spec-Driven Development (SDD): Fundamentos</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(36)" aria-label="Ir para slide 36: Caso Prático: Sistema de Ponto de Vendas (PDV)">
+            <div class="menu-btn-top">
+                <span class="menu-num">36</span>
+                <span class="menu-badge badge-sdd">ATO 3: SDD NA PRÁTICA</span>
+            </div>
+            <div class="menu-title">Caso Prático: Sistema de Ponto de Vendas (PDV)</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(37)" aria-label="Ir para slide 37: O Ciclo dos 4 Artefatos no PDV">
+            <div class="menu-btn-top">
+                <span class="menu-num">37</span>
+                <span class="menu-badge badge-sdd">ATO 3: SDD NA PRÁTICA</span>
+            </div>
+            <div class="menu-title">O Ciclo dos 4 Artefatos no PDV</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(38)" aria-label="Ir para slide 38: Artefato 1: spec.md — Estrutura e Escopo">
+            <div class="menu-btn-top">
+                <span class="menu-num">38</span>
+                <span class="menu-badge badge-sdd">ATO 3: SDD NA PRÁTICA</span>
+            </div>
+            <div class="menu-title">Artefato 1: spec.md — Estrutura e Escopo</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(39)" aria-label="Ir para slide 39: Artefato 1: spec.md — User Stories e Regras">
+            <div class="menu-btn-top">
+                <span class="menu-num">39</span>
+                <span class="menu-badge badge-sdd">ATO 3: SDD NA PRÁTICA</span>
+            </div>
+            <div class="menu-title">Artefato 1: spec.md — User Stories e Regras</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(40)" aria-label="Ir para slide 40: Artefato 2: plan.md — Arquitetura Técnica">
+            <div class="menu-btn-top">
+                <span class="menu-num">40</span>
+                <span class="menu-badge badge-sdd">ATO 3: SDD NA PRÁTICA</span>
+            </div>
+            <div class="menu-title">Artefato 2: plan.md — Arquitetura Técnica</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(41)" aria-label="Ir para slide 41: Artefato 2: plan.md — Modelo de Dados e Contratos">
+            <div class="menu-btn-top">
+                <span class="menu-num">41</span>
+                <span class="menu-badge badge-sdd">ATO 3: SDD NA PRÁTICA</span>
+            </div>
+            <div class="menu-title">Artefato 2: plan.md — Modelo de Dados e Contratos</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(42)" aria-label="Ir para slide 42: Artefato 3: tasks.md — Decomposição em Tarefas">
+            <div class="menu-btn-top">
+                <span class="menu-num">42</span>
+                <span class="menu-badge badge-sdd">ATO 3: SDD NA PRÁTICA</span>
+            </div>
+            <div class="menu-title">Artefato 3: tasks.md — Decomposição em Tarefas</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(43)" aria-label="Ir para slide 43: Artefato 3: tasks.md — Critérios e Testes">
+            <div class="menu-btn-top">
+                <span class="menu-num">43</span>
+                <span class="menu-badge badge-sdd">ATO 3: SDD NA PRÁTICA</span>
+            </div>
+            <div class="menu-title">Artefato 3: tasks.md — Critérios e Testes</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(44)" aria-label="Ir para slide 44: Artefato 4: state.md — Registro de Estado">
+            <div class="menu-btn-top">
+                <span class="menu-num">44</span>
+                <span class="menu-badge badge-sdd">ATO 3: SDD NA PRÁTICA</span>
+            </div>
+            <div class="menu-title">Artefato 4: state.md — Registro de Estado</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(45)" aria-label="Ir para slide 45: Artefato 4: state.md — Continuidade entre Sessões">
+            <div class="menu-btn-top">
+                <span class="menu-num">45</span>
+                <span class="menu-badge badge-sdd">ATO 3: SDD NA PRÁTICA</span>
+            </div>
+            <div class="menu-title">Artefato 4: state.md — Continuidade entre Sessões</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(46)" aria-label="Ir para slide 46: Validação em Ação: Guias e Testes no PDV">
+            <div class="menu-btn-top">
+                <span class="menu-num">46</span>
+                <span class="menu-badge badge-sdd">ATO 3: SDD NA PRÁTICA</span>
+            </div>
+            <div class="menu-title">Validação em Ação: Guias e Testes no PDV</div>
+        </button>
+        
+        <button class="menu-slide-btn" onclick="jumpToSlide(47)" aria-label="Ir para slide 47: Obrigado pela presença">
+            <div class="menu-btn-top">
+                <span class="menu-num">47</span>
+                <span class="menu-badge badge-sdd">ENCERRAMENTO</span>
+            </div>
+            <div class="menu-title">Obrigado pela presença</div>
+        </button>
+        
+        </div>
+    </div>
+
+    <div id="toast-msg">Notificação</div>
+
+    <script>
+        // ==========================================
+        // CONTROLE DO SLIDESHOW
+        // ==========================================
+        const TOTAL_SLIDES = 47;
+        let currentSlide = 1;
+        const progressBar = document.getElementById("top-progress-bar");
+        const overviewModal = document.getElementById("overview-modal");
+
+        function showSlide(index) {
+            if (index < 1) index = 1;
+            if (index > TOTAL_SLIDES) index = TOTAL_SLIDES;
+            
+            // Remove active dos outros slides
+            document.querySelectorAll(".slide-pane").forEach(pane => {
+                pane.classList.remove("active");
+            });
+
+            const targetPane = document.getElementById(`slide-${index}`);
+            if (targetPane) {
+                targetPane.classList.add("active");
+                currentSlide = index;
+                
+                // Atualiza barra de progresso
+                const progressPct = ((currentSlide) / TOTAL_SLIDES) * 100;
+                progressBar.style.width = `${progressPct}%`;
+                progressBar.setAttribute("aria-valuenow", currentSlide);
+                
+                // Atualiza hash na URL
+                window.location.hash = `#${currentSlide}`;
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlide < TOTAL_SLIDES) {
+                showSlide(currentSlide + 1);
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
+            }
+        }
+
+        function jumpToSlide(id) {
+            showSlide(id);
+            if (overviewModal.classList.contains("open")) {
+                toggleOverview();
+            }
+        }
+
+        function toggleOverview() {
+            overviewModal.classList.toggle("open");
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log("Modo tela cheia não suportado ou bloqueado:", err);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById("toast-msg");
+            toast.textContent = msg;
+            toast.style.display = "block";
+            setTimeout(() => {
+                toast.style.display = "none";
+            }, 2000);
+        }
+
+        // Navegação via teclado acessível
+        window.addEventListener("keydown", (e) => {
+            if (overviewModal.classList.contains("open")) {
+                if (e.key === "Escape" || e.key === "m" || e.key === "M") {
+                    toggleOverview();
+                }
+                return;
+            }
+
+            switch(e.key) {
+                case "ArrowRight":
+                case "ArrowDown":
+                case "PageDown":
+                case " ":
+                    e.preventDefault();
+                    nextSlide();
+                    break;
+                case "ArrowLeft":
+                case "ArrowUp":
+                case "PageUp":
+                    e.preventDefault();
+                    prevSlide();
+                    break;
+                case "Home":
+                    e.preventDefault();
+                    showSlide(1);
+                    break;
+                case "End":
+                    e.preventDefault();
+                    showSlide(TOTAL_SLIDES);
+                    break;
+                case "f":
+                case "F":
+                    toggleFullscreen();
+                    break;
+                case "m":
+                case "M":
+                    toggleOverview();
+                    break;
+            }
+        });
+
+        // Carregamento inicial por Hash e listeners
+        window.addEventListener("DOMContentLoaded", () => {
+            let start = 1;
+            if (window.location.hash) {
+                const hashNum = parseInt(window.location.hash.replace("#", ""), 10);
+                if (!isNaN(hashNum) && hashNum >= 1 && hashNum <= TOTAL_SLIDES) {
+                    start = hashNum;
+                }
+            }
+            showSlide(start);
+
+            // Adiciona cópia com 1 clique para todos os blocos de código
+            document.querySelectorAll(".code-box").forEach(box => {
+                box.addEventListener("click", () => {
+                    const text = box.innerText.trim();
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(() => {
+                            showToast("Código copiado para a área de transferência!");
+                        }).catch(() => {
+                            showToast("Erro ao copiar código.");
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
